@@ -1,0 +1,21 @@
+# dotenv environment variables file
+*.env
+
+# JetBrains IDE
+.idea
+
+# VS Code IDE
+.vscode
+.DS_Store
+
+# REST Client for test
+rest.http
+
+# Folder unnecessary
+bin/
+doc/
+tmp/
+certs/
+
+# Log file
+*.log

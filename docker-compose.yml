@@ -1,0 +1,22 @@
+version: "3"
+services:
+  source-code-marking:
+    build:
+      context: .
+    restart: always
+    depends_on: [mongo]
+    entrypoint: ["/app/server"]
+    ports:
+      - ${PORT}:${PORT}
+    environment:
+      DB_HOST: "mongodb://mongo:27017"
+
+  mongo:
+    image: "mongo:4.2.1"
+    container_name: "mongo"
+    volumes:
+      - "mongo:/data/db"
+    ports:
+      - "27100:27017"
+volumes:
+  mongo:
