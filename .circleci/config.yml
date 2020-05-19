@@ -1,0 +1,26 @@
+# Golang CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-go/ for more details
+version: 2
+jobs:
+  build:
+    docker:
+      # specify the version
+      - image: circleci/golang:1.12
+    environment: # environment variables for the build itself
+      PORT: "8080"
+      DB_HOST: mongodb+srv://fit16clc:P%40ssw0rd@interactivebook-tv55v.mongodb.net/test?retryWrites=true&w=majority
+      ENV: production
+    working_directory: /go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}
+    steps:
+      - checkout
+
+      # Install and run project
+      - run: go get -v -t -d ./...
+      - run: go test -v ./...
+      - run: make build-binary
+      - run: make run-binary
+      - run:
+          name: Validate service is working
+          command: |
+          curl --retry 10 --retry-delay 1 GET http://localhost:8080/health_check
