@@ -23,4 +23,4 @@ jobs:
       - run:
           name: Validate service is working
           command: |
-          curl --retry 10 --retry-delay 1 GET http://localhost:8080/health_check
+          curl GET http://localhost:8080/health_check
