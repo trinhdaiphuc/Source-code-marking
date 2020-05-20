@@ -4,10 +4,11 @@ services:
     build:
       context: .
     restart: always
-    depends_on: [mongo]
+    depends_on: 
+      - mongo
     entrypoint: ["/app/server"]
-    ports:
-      - ${PORT}:${PORT}
+    expose:
+      - ${PORT}
     environment:
       DB_HOST: "mongodb://mongo:27017"
 
@@ -18,5 +19,17 @@ services:
       - "mongo:/data/db"
     ports:
       - "27100:27017"
+
+  nginx:
+    image: nginx:latest
+    build:
+      dockerfile: deployments/Dockerfile
+      context: .
+    volumes:
+      - ./deployments/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - source-code-marking
+    ports:
+      - "4000:4000"
 volumes:
   mongo:
