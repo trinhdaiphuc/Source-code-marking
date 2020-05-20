@@ -10,10 +10,10 @@ import (
 )
 
 type User struct {
-	ID        string    `json:"id,omitempty" bson:"_id, omitempty"`
+	ID        string    `json:"id,omitempty" bson:"_id,omitempty"`
 	Email     string    `json:"email" form:"email" bson:"email"`
-	Password  string    `json:"password" form:"password" bson:"password"`
-	Name      string    `json:"name,omitempty" form:"name" bson:"name, omitempty"`
+	Password  string    `json:"password,omitempty" form:"password" bson:"password"`
+	Name      string    `json:"name,omitempty" form:"name" bson:"name,omitempty"`
 	CreatedAt time.Time `json:"created_at,omitempty" bson:"created_at"`
 	UpdatedAt time.Time `json:"updated_at,omitempty" bson:"updated_at"`
 }
