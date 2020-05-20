@@ -46,7 +46,6 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 
 	// Database connection
-	echoServer.Logger.Info(os.Getenv("DB_HOST"))
 	db, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("DB_HOST")))
 	if err != nil {
 		echoServer.Logger.Fatal("Error when connect to MongoDB.", err)

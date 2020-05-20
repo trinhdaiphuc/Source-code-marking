@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -194,9 +195,11 @@ func (h *Handler) Signin(c echo.Context) (err error) {
 	}
 
 	c.Response().Header().Set("token", tokenString)
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	u.Password = "" // Don't send password
-	return c.JSON(http.StatusOK, u)
+	c.Response().WriteHeader(http.StatusOK)
+	return json.NewEncoder(c.Response()).Encode(u)
 }
 
 // Profile handler
