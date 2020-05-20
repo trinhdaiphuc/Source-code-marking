@@ -54,9 +54,10 @@ func ConfigureMiddleware(echoServer *EchoServer) (err error) {
 
 	// add CORS header in response middleware
 	echoServer.EchoContext.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"*"},
-		AllowMethods: []string{http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete},
-		AllowHeaders: []string{"*"},
+		AllowOrigins:  []string{"*"},
+		AllowMethods:  []string{http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete},
+		AllowHeaders:  []string{"*"},
+		ExposeHeaders: []string{"X-Requested-With", "X-Xss-Protection", "X-Frame-Options", "Content-Length", "X-Content-Type-Options", "Origin", "Content-Type", "Accept", "Authorization", "Token"},
 	}))
 
 	// add recover middleware
