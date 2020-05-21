@@ -27,7 +27,7 @@ func main() {
 
 	err := godotenv.Load()
 	if err != nil {
-		echoServer.EchoContext.Logger.Error("Error loading .env file", err)
+		echoServer.EchoContext.Logger.Warn("Not found .env file", err)
 	}
 
 	// Set max go process
