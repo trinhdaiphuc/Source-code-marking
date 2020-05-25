@@ -2,21 +2,22 @@
 #
 # Check https://circleci.com/docs/2.0/language-go/ for more details
 version: 2
+workflows:
+  test-env-vars:
+    jobs:
+      - build:
+          context: Source code marking # has an env var called MY_ENV_VAR
 jobs:
   build:
     docker:
       # specify the version
       - image: circleci/golang:1.12
-    environment: # environment variables for the build itself
-      PORT: "8080"
-      DB_HOST: mongodb+srv://fit16clc:P%40ssw0rd@interactivebook-tv55v.mongodb.net/test?retryWrites=true&w=majority
-      ENV: production
     working_directory: /go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}
     steps:
       - checkout
 
       # Install and run project
-      - run: go get -v -t -d ./...
+      - run: go mod download
       - run: go test -v ./...
       - run: make build-binary
       - run: make run-binary
