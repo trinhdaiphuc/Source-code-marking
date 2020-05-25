@@ -2,11 +2,6 @@
 #
 # Check https://circleci.com/docs/2.0/language-go/ for more details
 version: 2
-workflows:
-  test-env-vars:
-    jobs:
-      - build:
-          context: Source code marking # has an env var called MY_ENV_VAR
 jobs:
   build:
     docker:
