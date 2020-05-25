@@ -7,8 +7,8 @@ jobs:
     docker:
       # specify the version
       - image: circleci/golang:1.12
-      environment:
-        GO111MODULE: "on"
+        environment:
+          GO111MODULE: "on"
     working_directory: /go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}
     steps:
       - checkout
