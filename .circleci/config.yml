@@ -21,7 +21,3 @@ jobs:
       - run: go test -v ./...
       - run: make build-binary
       - run: make run-binary
-      - run:
-          name: Validate service is working
-          command: |
-          curl GET http://localhost:8080/health_check
