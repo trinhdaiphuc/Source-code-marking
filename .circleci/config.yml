@@ -12,7 +12,6 @@ jobs:
       - checkout
 
       # Install and run project
+      - run: go get -v -t -d ./...
       - run: go mod download
       - run: go test -v ./...
-      - run: make build-binary
-      - run: make run-binary
