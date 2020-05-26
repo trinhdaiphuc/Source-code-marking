@@ -16,8 +16,8 @@ func (h *Handler) CustomHTTPErrorHandler(err error, context echo.Context) {
 		code = he.Code
 	}
 
-	h.AppLog.Error("Try to access path=" + context.Path())
-	h.AppLog.Error(err)
+	h.Logger.Error("Try to access path=" + context.Path())
+	h.Logger.Error(err)
 
 	// Send error to Sentry
 	go func() {

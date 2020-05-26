@@ -61,7 +61,7 @@ func main() {
 	models.NewUserCollection(db)
 
 	// Initialize handler
-	h := &handlers.Handler{DB: db, AppLog: echoServer.Logger}
+	h := handlers.NewUserHandlers(db, echoServer.Logger)
 
 	// configsure HTTP error handler
 	echoServer.EchoContext.HTTPErrorHandler = h.CustomHTTPErrorHandler

@@ -11,7 +11,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/trinhdaiphuc/Source-code-marking/internal"
-	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/handlers"
 )
 
 type EchoServer struct {
@@ -76,7 +75,7 @@ func ConfigureMiddleware(echoServer *EchoServer) (err error) {
 
 	// JWT middleware
 	echoServer.EchoContext.Use(middleware.JWTWithConfig(middleware.JWTConfig{
-		SigningKey: []byte(handlers.Key),
+		SigningKey: []byte(os.Getenv("SECRET_KEY")),
 		Skipper: func(c echo.Context) bool {
 			// Skip authentication for and signup login requests
 			if c.Path() == "/api/signin" || c.Path() == "/api/signup" ||

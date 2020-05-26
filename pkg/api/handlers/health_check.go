@@ -15,6 +15,6 @@ func (h *Handler) HealthCheck(c echo.Context) error {
 	resp := HealthCheckResponse{
 		Message: "Everything is good!",
 	}
-	h.AppLog.Debug("Heck-check service ", resp)
+	h.Logger.Debug("Heck-check service ", resp)
 	return c.JSON(http.StatusOK, resp)
 }

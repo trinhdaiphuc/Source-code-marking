@@ -1,4 +1,4 @@
-package handlers
+package users
 
 import (
 	"context"
@@ -22,6 +22,21 @@ import (
 type Claims struct {
 	ID string `json:"id"`
 	jwt.StandardClaims
+}
+
+type UserHandler struct {
+	Logger *internal.AppLog
+	DB     *mongo.Client
+	JWTKey string
+}
+
+func NewUserHandler(logger *internal.AppLog, jwtKey string, db *mongo.Client) (u *UserHandler) {
+	u = &UserHandler{
+		Logger: logger,
+		JWTKey: jwtKey,
+		DB:     db,
+	}
+	return
 }
 
 func createTokenWithUserID(userID string, JwtKey string) (string, error) {
@@ -52,7 +67,7 @@ func createTokenWithUserID(userID string, JwtKey string) (string, error) {
 	return stringToken, nil
 }
 
-func (h *Handler) signinByEmail(u *models.User, userColection *mongo.Collection) (err error) {
+func (h *UserHandler) signinByEmail(u *models.User, userColection *mongo.Collection) (err error) {
 	// Validate
 	if len(u.Password) < 6 {
 		return &echo.HTTPError{
@@ -65,7 +80,7 @@ func (h *Handler) signinByEmail(u *models.User, userColection *mongo.Collection)
 
 	user := models.User{}
 	if err := result.Decode(&user); err != nil {
-		h.AppLog.Info("Error when sign in by email ", err)
+		h.Logger.Info("Error when sign in by email ", err)
 		if err == mongo.ErrNoDocuments {
 			return &echo.HTTPError{Code: http.StatusUnauthorized, Message: "Invalid email or password."}
 		}
@@ -99,15 +114,15 @@ func (h *Handler) signinByEmail(u *models.User, userColection *mongo.Collection)
 }
 
 // Signup handler
-func (h *Handler) Signup(c echo.Context) (err error) {
-	h.AppLog.Info("Sign-up handler")
+func (h *UserHandler) Signup(c echo.Context) (err error) {
+	h.Logger.Info("Sign-up handler")
 
 	// Bind
 	u := &models.User{}
 	if err = c.Bind(u); err != nil {
 		return
 	}
-	h.AppLog.Debug("Sign-up parameters: ", *u)
+	h.Logger.Debug("Sign-up parameters: ", *u)
 	// Validate
 	if u.Email == "" || len(u.Password) < 6 {
 		return &echo.HTTPError{
@@ -122,7 +137,7 @@ func (h *Handler) Signup(c echo.Context) (err error) {
 
 	user := models.User{}
 	if err := resultFind.Decode(&user); err != nil {
-		h.AppLog.Debug("Error when sign in by email ", err)
+		h.Logger.Debug("Error when sign in by email ", err)
 		if err != mongo.ErrNoDocuments {
 			return &echo.HTTPError{
 				Code:    http.StatusInternalServerError,
@@ -141,7 +156,7 @@ func (h *Handler) Signup(c echo.Context) (err error) {
 	// Hash password
 	u.Password, err = internal.HashPassword(u.Password)
 	if err != nil {
-		h.AppLog.Error("Error when hashpassword ", err)
+		h.Logger.Error("Error when hashpassword ", err)
 		return
 	}
 
@@ -149,12 +164,12 @@ func (h *Handler) Signup(c echo.Context) (err error) {
 	u.CreatedAt = time.Now()
 	u.UpdatedAt = time.Now()
 
-	h.AppLog.Debug("UUID ", u)
+	h.Logger.Debug("UUID ", u)
 
 	// Save user
 	_, err = userCollection.InsertOne(context.Background(), u)
 	if err != nil {
-		h.AppLog.Debug("Error when sign-up ", err.Error())
+		h.Logger.Debug("Error when sign-up ", err.Error())
 		return &echo.HTTPError{
 			Code:     http.StatusInternalServerError,
 			Message:  "MongoDB is not avalable.",
@@ -166,14 +181,14 @@ func (h *Handler) Signup(c echo.Context) (err error) {
 }
 
 // Signin handler
-func (h *Handler) Signin(c echo.Context) (err error) {
-	h.AppLog.Debug("Sign-in handler")
+func (h *UserHandler) Signin(c echo.Context) (err error) {
+	h.Logger.Debug("Sign-in handler")
 	// Bind
 	u := &models.User{}
 	if err = c.Bind(u); err != nil {
 		return
 	}
-	h.AppLog.Debug("Sign-in parameters: ", *u)
+	h.Logger.Debug("Sign-in parameters: ", *u)
 
 	// Validate
 	if u.Email == "" {
@@ -189,12 +204,12 @@ func (h *Handler) Signin(c echo.Context) (err error) {
 	}
 
 	// Generate encoded token and send it as response
-	tokenString, err := createTokenWithUserID(u.ID, Key)
+	tokenString, err := createTokenWithUserID(u.ID, h.JWTKey)
 	if err != nil {
 		return err
 	}
 
-	c.Response().Header().Set("token", tokenString)
+	c.Response().Header().Set("Access-Token", tokenString)
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
 
 	u.Password = "" // Don't send password
@@ -203,7 +218,7 @@ func (h *Handler) Signin(c echo.Context) (err error) {
 }
 
 // Profile handler
-func (h *Handler) Profile(c echo.Context) (err error) {
+func (h *UserHandler) Profile(c echo.Context) (err error) {
 	// Bind
 	user := &models.User{}
 	authHeader := strings.Split(c.Request().Header.Get("Authorization"), "Bearer ")
@@ -211,12 +226,12 @@ func (h *Handler) Profile(c echo.Context) (err error) {
 	claims := &Claims{}
 	_, err = jwt.ParseWithClaims(jwtToken, claims,
 		func(token *jwt.Token) (interface{}, error) {
-			return []byte(Key), nil
+			return []byte(h.JWTKey), nil
 		})
 	userCollection := models.GetUserCollection(h.DB)
 	result := userCollection.FindOne(context.Background(), bson.M{"_id": claims.ID})
 	if err := result.Decode(&user); err != nil {
-		h.AppLog.Info("Error when sign in by email ", err)
+		h.Logger.Info("Error when sign in by email ", err)
 		if err == mongo.ErrNoDocuments {
 			return &echo.HTTPError{Code: http.StatusNotFound, Message: "Not found user"}
 		}
