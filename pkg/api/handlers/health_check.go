@@ -6,6 +6,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// HealthCheckResponse response a message
 type HealthCheckResponse struct {
 	Message string `json:"message"`
 }

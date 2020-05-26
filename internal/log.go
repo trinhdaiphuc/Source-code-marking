@@ -11,6 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// AppLog is a logger application
 type AppLog struct {
 	LogObject *logrus.Logger
 }
@@ -33,6 +34,7 @@ func caller() (timeString, packageName, funcName, filename, line string) {
 	return
 }
 
+// NewAppLog create an AppLog pointer
 func NewAppLog(env string, level string, logOutput string) *AppLog {
 	appLog := AppLog{
 		LogObject: logrus.New(),
@@ -76,6 +78,7 @@ func NewAppLog(env string, level string, logOutput string) *AppLog {
 	return &appLog
 }
 
+// Info log level is Info
 func (appLog *AppLog) Info(args ...interface{}) {
 	_, packageName, funcName, filename, line := caller()
 	entry := appLog.LogObject.WithFields(logrus.Fields{
@@ -87,6 +90,7 @@ func (appLog *AppLog) Info(args ...interface{}) {
 	entry.Info(args...)
 }
 
+// Debug log level is Debug
 func (appLog *AppLog) Debug(args ...interface{}) {
 	_, packageName, funcName, filename, line := caller()
 	entry := appLog.LogObject.WithFields(logrus.Fields{
@@ -98,6 +102,7 @@ func (appLog *AppLog) Debug(args ...interface{}) {
 	entry.Debug(args...)
 }
 
+// Warn log level is Warn
 func (appLog *AppLog) Warn(args ...interface{}) {
 	_, packageName, funcName, filename, line := caller()
 	entry := appLog.LogObject.WithFields(logrus.Fields{
@@ -109,6 +114,7 @@ func (appLog *AppLog) Warn(args ...interface{}) {
 	entry.Warn(args...)
 }
 
+// Error log level is Error
 func (appLog *AppLog) Error(args ...interface{}) {
 	_, packageName, funcName, filename, line := caller()
 	entry := appLog.LogObject.WithFields(logrus.Fields{
@@ -120,6 +126,7 @@ func (appLog *AppLog) Error(args ...interface{}) {
 	entry.Error(args...)
 }
 
+// Fatal log level is Fatal
 func (appLog *AppLog) Fatal(args ...interface{}) {
 	_, packageName, funcName, filename, line := caller()
 	entry := appLog.LogObject.WithFields(logrus.Fields{
@@ -131,6 +138,7 @@ func (appLog *AppLog) Fatal(args ...interface{}) {
 	entry.Fatal(args...)
 }
 
+// Panic log level is Panic
 func (appLog *AppLog) Panic(args ...interface{}) {
 	_, packageName, funcName, filename, line := caller()
 	entry := appLog.LogObject.WithFields(logrus.Fields{

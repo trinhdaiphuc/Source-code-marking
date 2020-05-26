@@ -78,7 +78,7 @@ func ConfigureMiddleware(echoServer *EchoServer) (err error) {
 		SigningKey: []byte(os.Getenv("SECRET_KEY")),
 		Skipper: func(c echo.Context) bool {
 			// Skip authentication for and signup login requests
-			if c.Path() == "/api/signin" || c.Path() == "/api/signup" ||
+			if c.Path() == "/api/v1/users/signin" || c.Path() == "/api/v1/users/signup" ||
 				c.Path() == "/" || c.Path() == "/metrics" ||
 				c.Path() == "/health_check" || c.Path() == "/health-check" {
 				return true

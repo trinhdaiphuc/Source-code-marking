@@ -52,23 +52,22 @@ func main() {
 	}
 	err = db.Ping(ctx, nil)
 	if err != nil {
-		echoServer.Logger.Fatal("Could not connect to MongoDB: %v\n", err)
+		echoServer.Logger.Fatal("Could not connect to MongoDB: %v", err)
 	} else {
 		echoServer.Logger.Info("Connected to Mongodb.")
 	}
 
 	// Create new User collection
-	models.NewUserCollection(db)
+	models.NewModelDB(db)
 
 	// Initialize handler
-	h := handlers.NewUserHandlers(db, echoServer.Logger)
+	h := handlers.NewHandlers(db, echoServer.Logger)
 
 	// configsure HTTP error handler
 	echoServer.EchoContext.HTTPErrorHandler = h.CustomHTTPErrorHandler
 
 	// configs routing server
-	routers.LandingPage(echoServer.EchoContext, h)
-	routers.Users(echoServer.EchoContext, h)
+	routers.Routing(echoServer.EchoContext, h)
 
 	// Customizing Echo server
 	serverCustomize := &http.Server{

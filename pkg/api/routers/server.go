@@ -5,14 +5,28 @@ import (
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/handlers"
 )
 
-func LandingPage(e *echo.Echo, h *handlers.Handler) {
+func landingPage(e *echo.Echo, h *handlers.Handler) {
 	e.GET("/", h.LandingPage)
 	e.GET("/health-check", h.HealthCheck)
 	e.GET("/health_check", h.HealthCheck)
 }
 
-func Users(e *echo.Echo, h *handlers.Handler) {
-	e.POST("/api/signup", h.Signup)
-	e.POST("/api/signin", h.Signin)
-	e.GET("/api/profile", h.Profile)
+func users(e *echo.Echo, h *handlers.Handler) {
+	e.POST("/api/v1/users/signup", h.Signup)
+	e.POST("/api/v1/users/signin", h.Signin)
+	e.GET("/api/v1/users/profile", h.Profile)
+	e.GET("/api/v1/users/:id", h.GetUser)
+	e.GET("/api/v1/users", h.GetAllUsers)
+	e.PUT("/api/v1/users", h.UpdateUser)
+	e.DELETE("/api/v1/users/:id", h.DeleteUser)
+}
+
+func files(e *echo.Echo, h *handlers.Handler) {
+	e.POST("/api/v1/files", h.CreateFile)
+}
+
+func Routing(e *echo.Echo, h *handlers.Handler) {
+	landingPage(e, h)
+	users(e, h)
+	files(e, h)
 }
