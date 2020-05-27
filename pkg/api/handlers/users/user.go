@@ -12,7 +12,8 @@ import (
 )
 
 type Claims struct {
-	ID string `json:"id"`
+	ID   string `json:"id"`
+	Role string `json:"role"`
 	jwt.StandardClaims
 }
 
@@ -31,14 +32,15 @@ func NewUserHandler(logger *internal.AppLog, jwtKey string, db *mongo.Client) (u
 	return
 }
 
-func createTokenWithUserID(userID string, JwtKey string) (string, error) {
+func createTokenWithUser(userID, role, JwtKey string) (string, error) {
 	// Declare the expiration time of the token
 	// here, we have kept it as 24 hours
 	expirationTime := time.Now().Add(24 * time.Hour)
 
 	// Create the JWT claims, which includes the username and expiry time
 	claims := &Claims{
-		ID: userID,
+		ID:   userID,
+		Role: role,
 		StandardClaims: jwt.StandardClaims{
 			// In JWT, the expiry time is expressed as unix milliseconds
 			ExpiresAt: expirationTime.Unix(),

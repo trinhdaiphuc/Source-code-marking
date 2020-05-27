@@ -8,6 +8,7 @@ type File struct {
 	ExerciseID string    `json:"exercise_id,omitempty" bson:"exercise_id,omitempty"`
 	Name       string    `json:"name,omitempty" bson:"name,omitempty"`
 	Data       string    `json:"data" bson:"data"`
+	Mark       float32   `json:"mark,omitempty" bson:"mark,omitempty"`
 	Comments   []Comment `json:"comments,omitempty" bson:"comments,omitempty"`
 }
 

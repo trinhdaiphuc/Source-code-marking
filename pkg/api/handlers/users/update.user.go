@@ -63,7 +63,7 @@ func (h *UserHandler) UpdateUser(c echo.Context) (err error) {
 		}
 	}
 	// Generate encoded token and send it as response
-	tokenString, err := createTokenWithUserID(u.ID, h.JWTKey)
+	tokenString, err := createTokenWithUser(data.ID, data.Role, h.JWTKey)
 	if err != nil {
 		return err
 	}

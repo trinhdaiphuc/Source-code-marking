@@ -31,9 +31,10 @@ func (h *UserHandler) Signup(c echo.Context) (err error) {
 		}
 	}
 
+	ctx := context.Background()
 	// Check email had created or not.
 	userCollection := models.GetUserCollection(h.DB)
-	resultFind := userCollection.FindOne(context.Background(), bson.M{"email": u.Email})
+	resultFind := userCollection.FindOne(ctx, bson.M{"email": u.Email})
 
 	user := models.User{}
 	if err := resultFind.Decode(&user); err != nil {
@@ -63,6 +64,25 @@ func (h *UserHandler) Signup(c echo.Context) (err error) {
 	u.ID = uuid.NewV4().String()
 	u.CreatedAt = time.Now()
 	u.UpdatedAt = time.Now()
+
+	roleCollection := models.GetRoleCollection(h.DB)
+	result := roleCollection.FindOne(ctx, bson.M{"name": u.Role})
+
+	role := &models.Role{}
+
+	if err := result.Decode(&role); err != nil {
+		h.Logger.Debug("Error when sign in by email ", err)
+		if err == mongo.ErrNoDocuments {
+			return &echo.HTTPError{
+				Code:    http.StatusBadRequest,
+				Message: "Invalid role",
+			}
+		}
+		return &echo.HTTPError{
+			Code:    http.StatusInternalServerError,
+			Message: "MongoDB is not avalable.",
+		}
+	}
 
 	h.Logger.Debug("UUID ", u)
 

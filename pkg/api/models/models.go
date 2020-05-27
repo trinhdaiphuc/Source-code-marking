@@ -12,4 +12,5 @@ type ListQueryParam struct {
 
 func NewModelDB(db *mongo.Client) {
 	newUserCollection(db)
+	newRoleCollection(db)
 }
