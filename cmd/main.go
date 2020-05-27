@@ -52,7 +52,7 @@ func main() {
 	}
 	err = db.Ping(ctx, nil)
 	if err != nil {
-		echoServer.Logger.Fatal("Could not connect to MongoDB: %v", err)
+		echoServer.Logger.Fatal("Could not connect to MongoDB: ", err)
 	} else {
 		echoServer.Logger.Info("Connected to Mongodb.")
 	}
