@@ -2,7 +2,6 @@ package users
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -36,13 +35,15 @@ func (h *UserHandler) UpdateUser(c echo.Context) (err error) {
 		h.Logger.Error("Error when get a user: ", err)
 		if err == mongo.ErrNoDocuments {
 			return &echo.HTTPError{
-				Code:    http.StatusNotFound,
-				Message: err,
+				Code:     http.StatusNotFound,
+				Message:  "Not found user",
+				Internal: err,
 			}
 		}
 		return &echo.HTTPError{
-			Code:    http.StatusInternalServerError,
-			Message: fmt.Sprintf("[Update user] Internal server error %v", err),
+			Code:     http.StatusInternalServerError,
+			Message:  "[Update user] Internal server error",
+			Internal: err,
 		}
 	}
 
@@ -58,8 +59,9 @@ func (h *UserHandler) UpdateUser(c echo.Context) (err error) {
 	err = resultUpdate.Decode(&data)
 	if err != nil {
 		return &echo.HTTPError{
-			Code:    http.StatusInternalServerError,
-			Message: fmt.Sprintf("[Update user] Internal server error %v", err),
+			Code:     http.StatusInternalServerError,
+			Message:  "[Update user] Internal server error",
+			Internal: err,
 		}
 	}
 	// Generate encoded token and send it as response

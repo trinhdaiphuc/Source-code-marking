@@ -45,8 +45,9 @@ func (h *UserHandler) GetAllUsers(c echo.Context) (err error) {
 	if err != nil {
 		h.Logger.Error("Internal error when Find: ", err)
 		return &echo.HTTPError{
-			Code:    http.StatusInternalServerError,
-			Message: fmt.Sprintf("[Get all user] Internal server error %v", err),
+			Code:     http.StatusInternalServerError,
+			Message:  "[Get all user] Internal server error",
+			Internal: err,
 		}
 	}
 

@@ -23,10 +23,24 @@ func users(e *echo.Echo, h *handlers.Handler) {
 
 func files(e *echo.Echo, h *handlers.Handler) {
 	e.POST("/api/v1/files", h.CreateFile)
+	e.GET("/api/v1/files/:id", h.GetFile)
+	e.GET("/api/v1/files", h.GetAllFiles)
+	e.PUT("/api/v1/files/:id", h.UpdateFile)
+	e.DELETE("/api/v1/files/:id", h.DeleteFile)
+	e.GET("/api/v1/files/:id/comments", h.ListComments)
+}
+
+func comments(e *echo.Echo, h *handlers.Handler) {
+	e.POST("/api/v1/comments", h.CreateComment)
+	e.GET("/api/v1/comments/:id", h.GetComment)
+	e.GET("/api/v1/comments", h.GetAllComments)
+	e.PUT("/api/v1/comments/:id", h.UpdateComment)
+	e.DELETE("/api/v1/comments/:id", h.DeleteComment)
 }
 
 func Routing(e *echo.Echo, h *handlers.Handler) {
 	landingPage(e, h)
 	users(e, h)
 	files(e, h)
+	comments(e, h)
 }

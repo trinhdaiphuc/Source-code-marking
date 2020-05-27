@@ -74,13 +74,15 @@ func (h *UserHandler) Signup(c echo.Context) (err error) {
 		h.Logger.Debug("Error when sign in by email ", err)
 		if err == mongo.ErrNoDocuments {
 			return &echo.HTTPError{
-				Code:    http.StatusBadRequest,
-				Message: "Invalid role",
+				Code:     http.StatusBadRequest,
+				Message:  "Invalid role",
+				Internal: err,
 			}
 		}
 		return &echo.HTTPError{
-			Code:    http.StatusInternalServerError,
-			Message: "MongoDB is not avalable.",
+			Code:     http.StatusInternalServerError,
+			Message:  "[Signup] Internal server error",
+			Internal: err,
 		}
 	}
 

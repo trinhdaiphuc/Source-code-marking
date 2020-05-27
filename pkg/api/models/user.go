@@ -11,10 +11,10 @@ import (
 
 type User struct {
 	ID        string    `json:"id,omitempty" bson:"_id,omitempty"`
-	Email     string    `json:"email" form:"email" bson:"email"`
-	Password  string    `json:"password,omitempty" form:"password" bson:"password"`
-	Name      string    `json:"name,omitempty" form:"name" bson:"name,omitempty"`
-	Role      string    `json:"role,omitempty" form:"role" bson:"role,omitempty"`
+	Email     string    `json:"email" bson:"email"`
+	Password  string    `json:"password,omitempty" bson:"password"`
+	Name      string    `json:"name,omitempty" bson:"name,omitempty"`
+	Role      string    `json:"role,omitempty" bson:"role,omitempty"`
 	CreatedAt time.Time `json:"created_at,omitempty" bson:"created_at"`
 	UpdatedAt time.Time `json:"updated_at,omitempty" bson:"updated_at"`
 }
@@ -49,7 +49,7 @@ func ConvertUserArrayToListUser(users []User, nextPageToken, totalRecords int64)
 		NextPageToken: nextPageToken,
 		TotalRecords:  totalRecords,
 	}
-	for i, _ := range listUser.Users {
+	for i := range listUser.Users {
 		listUser.Users[i].Password = ""
 	}
 	return listUser
