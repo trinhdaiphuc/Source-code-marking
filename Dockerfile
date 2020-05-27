@@ -15,7 +15,6 @@ RUN make build-binary
 FROM alpine:3.10
 WORKDIR /app
 
-COPY --from=build /app/src/.env /app/
 COPY --from=build /app/src/bin/server /app/
 
 ENTRYPOINT ["/app/server"]

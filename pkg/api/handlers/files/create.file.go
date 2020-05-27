@@ -3,6 +3,7 @@ package files
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
@@ -22,7 +23,11 @@ func (h *FileHandler) CreateFile(c echo.Context) (err error) {
 	userToken := c.Get("user").(*jwt.Token)
 	claims := userToken.Claims.(jwt.MapClaims)
 	userID := claims["id"].(string)
+
 	fileItem.UserID = userID
+	fileItem.CreatedAt = time.Now().UTC()
+	fileItem.UpdatedAt = time.Now().UTC()
+
 	h.Logger.Debug("Sign-in parameters: ", *fileItem)
 	fileCollection := models.GetFileCollection(h.DB)
 	_, err = fileCollection.InsertOne(context.Background(), fileItem)

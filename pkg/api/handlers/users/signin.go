@@ -26,10 +26,15 @@ func (h *UserHandler) signinByEmail(u models.User, userColection *mongo.Collecti
 	if err := result.Decode(&user); err != nil {
 		h.Logger.Info("Error when sign in by email ", err)
 		if err == mongo.ErrNoDocuments {
-			return nil, &echo.HTTPError{Code: http.StatusUnauthorized, Message: "Invalid email or password."}
+			return nil, &echo.HTTPError{
+				Code:    http.StatusUnauthorized,
+				Message: "Invalid email or password.",
+			}
 		}
-		return nil, &echo.HTTPError{Code: http.StatusInternalServerError,
-			Message: "MongoDB is not avalable.",
+		return nil, &echo.HTTPError{
+			Code:     http.StatusInternalServerError,
+			Message:  "[Signin] Internal server error",
+			Internal: err,
 		}
 	}
 

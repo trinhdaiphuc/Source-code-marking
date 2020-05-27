@@ -24,10 +24,16 @@ func (h *UserHandler) Profile(c echo.Context) (err error) {
 	if err := result.Decode(&user); err != nil {
 		h.Logger.Info("Error when sign in by email ", err)
 		if err == mongo.ErrNoDocuments {
-			return &echo.HTTPError{Code: http.StatusNotFound, Message: "Not found user"}
+			return &echo.HTTPError{
+				Code:     http.StatusNotFound,
+				Message:  "Not found user %v",
+				Internal: err,
+			}
 		}
-		return &echo.HTTPError{Code: http.StatusInternalServerError,
-			Message: "MongoDB is not avalable.",
+		return &echo.HTTPError{
+			Code:     http.StatusInternalServerError,
+			Message:  "[Profile] Internal server error ",
+			Internal: err,
 		}
 	}
 	user.Password = ""

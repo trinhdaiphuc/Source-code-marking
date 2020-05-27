@@ -12,7 +12,7 @@ import (
 
 // Signin handler
 func (h *UserHandler) GetUser(c echo.Context) (err error) {
-	h.Logger.Debug("Sign-in handler")
+	h.Logger.Debug("Get user handler")
 	// Get param
 	userID := c.Param("id")
 
@@ -22,11 +22,17 @@ func (h *UserHandler) GetUser(c echo.Context) (err error) {
 	user := models.User{}
 	if err := resultFind.Decode(&user); err != nil {
 		h.Logger.Debug("Error when sign in by email ", err)
-		if err != mongo.ErrNoDocuments {
+		if err == mongo.ErrNoDocuments {
 			return &echo.HTTPError{
-				Code:    http.StatusInternalServerError,
-				Message: "MongoDB is not avalable.",
+				Code:     http.StatusNotFound,
+				Message:  "Not found user %v",
+				Internal: err,
 			}
+		}
+		return &echo.HTTPError{
+			Code:     http.StatusInternalServerError,
+			Message:  "[Get user] Internal server error",
+			Internal: err,
 		}
 	}
 	user.Password = ""

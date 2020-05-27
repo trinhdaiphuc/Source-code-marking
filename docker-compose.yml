@@ -3,9 +3,11 @@ services:
   source-code-marking:
     build:
       context: .
+    env_file: .env
     restart: always
     depends_on: [mongo]
-    entrypoint: ["/app/server"]
+    volumes:
+      - .:/app/src
     ports:
       - ${PORT}:${PORT}
     environment:
