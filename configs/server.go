@@ -1,7 +1,6 @@
 package configs
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 	"runtime"
@@ -10,8 +9,8 @@ import (
 	"github.com/labstack/echo-contrib/prometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/gommon/log"
 	"github.com/trinhdaiphuc/Source-code-marking/internal"
-	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/handlers"
 )
 
 type EchoServer struct {
@@ -24,7 +23,7 @@ func ConfigureMaxProcess() {
 	if err == nil {
 		runtime.GOMAXPROCS(ServerMaxProcess)
 	}
-	fmt.Println("Server is running with max process: ", runtime.GOMAXPROCS(0))
+	log.Info("Server is running with max process: ", runtime.GOMAXPROCS(0))
 }
 
 func NewEchoServer() *EchoServer {
@@ -41,9 +40,36 @@ func LoggerConfig(e *EchoServer) {
 
 	e.Logger = appLog
 
+	if l, ok := e.EchoContext.Logger.(*log.Logger); ok {
+		l.SetHeader("${time_rfc3339} ${level} ${file} ${long_file} ${line}")
+	}
+
 	e.EchoContext.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: "method=${method}, uri=${uri}, status=${status}\n",
 	}))
+
+	// set log level
+	switch os.Getenv("LOG_LEVEL") {
+	case "DEBUG":
+		e.EchoContext.Logger.SetLevel(log.DEBUG)
+	case "INFO":
+		e.EchoContext.Logger.SetLevel(log.INFO)
+	case "WARNING":
+		e.EchoContext.Logger.SetLevel(log.WARN)
+	case "ERROR":
+		e.EchoContext.Logger.SetLevel(log.ERROR)
+	default:
+		e.EchoContext.Logger.SetLevel(log.WARN)
+	}
+
+	// set log output
+	if len(os.Getenv("ACCESS_LOG_FILE_PATH")) > 0 {
+		accessLogFileHandler, err := os.OpenFile(os.Getenv("ACCESS_LOG_FILE_PATH"), os.O_APPEND|os.O_WRONLY, 0666)
+		if err != nil {
+			panic(err)
+		}
+		e.EchoContext.Logger.SetOutput(accessLogFileHandler)
+	}
 }
 
 func ConfigureMiddleware(echoServer *EchoServer) (err error) {
@@ -76,10 +102,10 @@ func ConfigureMiddleware(echoServer *EchoServer) (err error) {
 
 	// JWT middleware
 	echoServer.EchoContext.Use(middleware.JWTWithConfig(middleware.JWTConfig{
-		SigningKey: []byte(handlers.Key),
+		SigningKey: []byte(os.Getenv("SECRET_KEY")),
 		Skipper: func(c echo.Context) bool {
 			// Skip authentication for and signup login requests
-			if c.Path() == "/api/signin" || c.Path() == "/api/signup" ||
+			if c.Path() == "/api/v1/users/signin" || c.Path() == "/api/v1/users/signup" ||
 				c.Path() == "/" || c.Path() == "/metrics" ||
 				c.Path() == "/health_check" || c.Path() == "/health-check" {
 				return true
