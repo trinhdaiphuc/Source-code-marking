@@ -2,9 +2,7 @@ package handlers
 
 import (
 	"net/http"
-	"time"
 
-	"github.com/getsentry/sentry-go"
 	"github.com/labstack/echo/v4"
 )
 
@@ -16,17 +14,11 @@ func (h *Handler) CustomHTTPErrorHandler(err error, context echo.Context) {
 		code = he.Code
 	}
 
-	h.Logger.Error("Try to access path=" + context.Path())
+	h.Logger.Error("Try to access path = " + context.Path())
 	h.Logger.Error(err)
 
-	// Send error to Sentry
-	go func() {
-		sentry.CaptureException(err)
-		sentry.Flush(time.Second * 5)
-	}()
-
 	response := make(map[string]interface{})
-	response["message"] = "Try to access path=" + context.Path()
+	response["message"] = "Try to access path = " + context.Path()
 	response["success"] = false
 	response["error"] = err.Error()
 	context.JSON(code, response)
