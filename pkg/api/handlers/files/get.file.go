@@ -18,7 +18,7 @@ func (h *FileHandler) GetFile(c echo.Context) (err error) {
 	userCollection := models.GetFileCollection(h.DB)
 	resultFind := userCollection.FindOne(context.Background(), bson.M{"_id": fileID})
 
-	file := models.File{}
+	file := &models.File{}
 	if err := resultFind.Decode(&file); err != nil {
 		h.Logger.Debug("Error when sign in by email ", err)
 		if err == mongo.ErrNoDocuments {

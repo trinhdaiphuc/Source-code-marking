@@ -28,7 +28,6 @@ func (h *FileHandler) CreateFile(c echo.Context) (err error) {
 	fileItem.CreatedAt = time.Now().UTC()
 	fileItem.UpdatedAt = time.Now().UTC()
 
-	h.Logger.Debug("Sign-in parameters: ", *fileItem)
 	fileCollection := models.GetFileCollection(h.DB)
 	_, err = fileCollection.InsertOne(context.Background(), fileItem)
 
