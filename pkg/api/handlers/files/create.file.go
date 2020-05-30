@@ -32,7 +32,6 @@ func (h *FileHandler) CreateFile(c echo.Context) (err error) {
 	_, err = fileCollection.InsertOne(context.Background(), fileItem)
 
 	if err != nil {
-		h.Logger.Debug("Error when sign-up ", err.Error())
 		return &echo.HTTPError{
 			Code:     http.StatusInternalServerError,
 			Message:  "MongoDB is not avalable.",
