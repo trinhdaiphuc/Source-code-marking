@@ -60,6 +60,13 @@ func (h *ClassHandler) EnrollClass(c echo.Context) (err error) {
 	result = classCollection.FindOneAndUpdate(ctx, filter, update, options.FindOneAndUpdate().SetReturnDocument(1))
 	err = result.Decode(&data)
 	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return &echo.HTTPError{
+				Code:     http.StatusNotFound,
+				Message:  "Not found class",
+				Internal: err,
+			}
+		}
 		return &echo.HTTPError{
 			Code:     http.StatusInternalServerError,
 			Message:  "[Update user] Internal server error",

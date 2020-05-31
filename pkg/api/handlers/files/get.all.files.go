@@ -33,7 +33,7 @@ func (h *FileHandler) GetAllFiles(c echo.Context) (err error) {
 		orderBy = listParam.OrderBy
 	}
 
-	var opts []*options.FindOptions
+	opts := []*options.FindOptions{}
 	opts = append(opts, options.Find().SetSort(bson.D{{orderBy, orderType}}))
 	opts = append(opts, options.Find().SetSkip(skip))
 	opts = append(opts, options.Find().SetLimit(limit))

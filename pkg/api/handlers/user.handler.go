@@ -40,3 +40,8 @@ func (h *Handler) UpdateUser(c echo.Context) (err error) {
 func (h *Handler) DeleteUser(c echo.Context) (err error) {
 	return h.UserHandler.DeleteUser(c)
 }
+
+// ListClasses is a user information
+func (h *Handler) ListClasses(c echo.Context) (err error) {
+	return h.UserHandler.ListClasses(c)
+}

@@ -26,7 +26,7 @@ func (h *UserHandler) Profile(c echo.Context) (err error) {
 		if err == mongo.ErrNoDocuments {
 			return &echo.HTTPError{
 				Code:     http.StatusNotFound,
-				Message:  "Not found user %v",
+				Message:  "Not found user ",
 				Internal: err,
 			}
 		}

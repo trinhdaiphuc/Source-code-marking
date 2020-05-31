@@ -33,12 +33,17 @@ func (h *UserHandler) GetAllUsers(c echo.Context) (err error) {
 		orderBy = listParam.OrderBy
 	}
 
-	var opts []*options.FindOptions
+	opts := []*options.FindOptions{}
 	opts = append(opts, options.Find().SetSort(bson.D{{orderBy, orderType}}))
 	opts = append(opts, options.Find().SetSkip(skip))
 	opts = append(opts, options.Find().SetLimit(limit))
 
 	filter := bson.M{}
+
+	if listParam.FilterBy != "" && listParam.FilterValue != "" {
+		filter = bson.M{listParam.FilterBy: listParam.FilterValue}
+	}
+
 	userCollection := models.GetUserCollection(h.DB)
 	ctx := context.Background()
 	cursor, err := userCollection.Find(ctx, filter, opts...)
