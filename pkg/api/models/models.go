@@ -1,6 +1,10 @@
 package models
 
-import "go.mongodb.org/mongo-driver/mongo"
+import (
+	"os"
+
+	"go.mongodb.org/mongo-driver/mongo"
+)
 
 type (
 	ListQueryParam struct {
@@ -21,4 +25,8 @@ type (
 func NewModelDB(db *mongo.Client) {
 	newUserCollection(db)
 	newRoleCollection(db)
+}
+
+func getDatabase(db *mongo.Client) (database *mongo.Database) {
+	return db.Database(os.Getenv("DATABASE_NAME"))
 }

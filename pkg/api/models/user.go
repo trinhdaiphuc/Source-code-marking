@@ -34,12 +34,12 @@ func newUserCollection(db *mongo.Client) {
 		// create UniqueIndex option
 		Options: options.Index().SetUnique(true),
 	}
-	userCollection := db.Database("Source-code-marking").Collection("users")
+	userCollection := getDatabase(db).Collection("users")
 	userCollection.Indexes().CreateOne(context.Background(), mod)
 }
 
 func GetUserCollection(db *mongo.Client) *mongo.Collection {
-	userCollection := db.Database("Source-code-marking").Collection("users")
+	userCollection := getDatabase(db).Collection("users")
 	return userCollection
 }
 

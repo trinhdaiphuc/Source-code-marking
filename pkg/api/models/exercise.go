@@ -26,7 +26,7 @@ type (
 )
 
 func GetExerciseCollection(db *mongo.Client) *mongo.Collection {
-	ExerciseCollection := db.Database("Source-code-marking").Collection("exercisees")
+	ExerciseCollection := getDatabase(db).Collection("exercisees")
 	return ExerciseCollection
 }
 

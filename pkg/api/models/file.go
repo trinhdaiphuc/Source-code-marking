@@ -25,7 +25,7 @@ type ListFile struct {
 }
 
 func GetFileCollection(db *mongo.Client) *mongo.Collection {
-	fileCollection := db.Database("Source-code-marking").Collection("files")
+	fileCollection := getDatabase(db).Collection("files")
 	return fileCollection
 }
 
