@@ -14,9 +14,23 @@ import (
 
 func (h *ExerciseHandler) ListFiles(c echo.Context) (err error) {
 	listParam := &models.ListQueryParam{}
-	if err = c.Bind(listParam); err != nil {
-		return
+
+	if err := c.Bind(listParam); err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusBadRequest,
+			Message:  "Invalid arguments error",
+			Internal: err,
+		}
 	}
+
+	if err := c.Validate(listParam); err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusBadRequest,
+			Message:  "Invalid arguments error",
+			Internal: err,
+		}
+	}
+
 	h.Logger.Debug(fmt.Sprintf("List query parameters: %v", listParam))
 	limit := listParam.PageSize
 	page := listParam.PageToken

@@ -35,6 +35,14 @@ func (h *ClassHandler) CreateClass(c echo.Context) (err error) {
 		}
 	}
 
+	if err := c.Validate(classItem); err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusBadRequest,
+			Message:  "Invalid arguments error",
+			Internal: err,
+		}
+	}
+
 	user := models.User{}
 	userCollection := models.GetUserCollection(h.DB)
 	result := userCollection.FindOne(context.Background(), bson.M{"_id": userID})

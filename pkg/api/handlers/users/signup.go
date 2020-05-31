@@ -19,9 +19,23 @@ func (h *UserHandler) Signup(c echo.Context) (err error) {
 
 	// Bind
 	u := &models.User{}
-	if err = c.Bind(u); err != nil {
-		return
+
+	if err := c.Bind(u); err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusBadRequest,
+			Message:  "Invalid arguments error",
+			Internal: err,
+		}
 	}
+
+	if err := c.Validate(u); err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusBadRequest,
+			Message:  "Invalid arguments error",
+			Internal: err,
+		}
+	}
+
 	h.Logger.Debug("Sign-up parameters: ", *u)
 	// Validate
 	if u.Email == "" || len(u.Password) < 6 {
@@ -62,6 +76,7 @@ func (h *UserHandler) Signup(c echo.Context) (err error) {
 	}
 
 	u.ID = uuid.NewV4().String()
+	u.IsVerified = false
 	u.CreatedAt = time.Now()
 	u.UpdatedAt = time.Now()
 
@@ -85,8 +100,6 @@ func (h *UserHandler) Signup(c echo.Context) (err error) {
 			Internal: err,
 		}
 	}
-
-	h.Logger.Debug("UUID ", u)
 
 	// Save user
 	_, err = userCollection.InsertOne(context.Background(), u)

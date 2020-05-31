@@ -9,10 +9,10 @@ import (
 type (
 	Exercise struct {
 		ID          string    `json:"id,omitempty" bson:"_id"`
-		ClassID     string    `json:"class_id" bson:"class_id"`
+		ClassID     string    `json:"class_id" bson:"class_id" validate:"required"`
 		Name        string    `json:"name" bson:"name"`
 		Description string    `json:"description" bson:"description"`
-		Deadline    time.Time `json:"deadline" bson:"deadline"`
+		Deadline    time.Time `json:"deadline" bson:"deadline" validate:"required"`
 		IsOpen      bool      `json:"is_open" bson:"is_open"`
 		CreatedAt   time.Time `json:"created_at,omitempty" bson:"created_at,omitempty"`
 		UpdatedAt   time.Time `json:"updated_at,omitempty" bson:"updated_at,omitempty"`

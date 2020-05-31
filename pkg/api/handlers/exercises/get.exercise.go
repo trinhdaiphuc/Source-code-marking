@@ -20,7 +20,6 @@ func (h *ExerciseHandler) GetExercise(c echo.Context) (err error) {
 
 	Exercise := &models.Exercise{}
 	if err := resultFind.Decode(&Exercise); err != nil {
-		h.Logger.Debug("Error when sign in by email ", err)
 		if err == mongo.ErrNoDocuments {
 			return &echo.HTTPError{
 				Code:     http.StatusNotFound,

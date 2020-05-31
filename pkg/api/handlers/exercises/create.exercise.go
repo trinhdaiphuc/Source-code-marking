@@ -14,8 +14,21 @@ import (
 
 func (h *ExerciseHandler) CreateExercise(c echo.Context) (err error) {
 	exerciseItem := &models.Exercise{}
-	if err = c.Bind(exerciseItem); err != nil {
-		return
+
+	if err := c.Bind(exerciseItem); err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusBadRequest,
+			Message:  "Invalid arguments error",
+			Internal: err,
+		}
+	}
+
+	if err := c.Validate(exerciseItem); err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusBadRequest,
+			Message:  "Invalid arguments error",
+			Internal: err,
+		}
 	}
 
 	h.Logger.Debug("Create Exercise parameters ", exerciseItem)

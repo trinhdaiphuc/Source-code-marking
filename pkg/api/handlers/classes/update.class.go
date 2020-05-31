@@ -25,6 +25,7 @@ func (h *ClassHandler) UpdateClass(c echo.Context) (err error) {
 			Internal: err,
 		}
 	}
+
 	userToken := c.Get("user").(*jwt.Token)
 	claims := userToken.Claims.(jwt.MapClaims)
 	userID := claims["id"].(string)

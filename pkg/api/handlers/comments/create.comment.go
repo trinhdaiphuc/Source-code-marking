@@ -24,6 +24,14 @@ func (h *CommentHandler) CreateComment(c echo.Context) (err error) {
 		}
 	}
 
+	if err := c.Validate(commentItem); err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusBadRequest,
+			Message:  "Invalid arguments error",
+			Internal: err,
+		}
+	}
+
 	h.Logger.Debug("Create comments parameters ", commentItem)
 
 	commentItem.ID = uuid.NewV4().String()

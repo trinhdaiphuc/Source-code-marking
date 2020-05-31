@@ -116,7 +116,7 @@ func ConfigureMiddleware(echoServer *EchoServer) (err error) {
 		Skipper: func(c echo.Context) bool {
 			// Skip authentication for and signup login requests
 			if c.Path() == "/api/v1/users/signin" || c.Path() == "/api/v1/users/signup" ||
-				c.Path() == "/" || c.Path() == "/metrics" ||
+				c.Path() == "/" || c.Path() == "/metrics" || c.Path() == "/swagger/*" ||
 				c.Path() == "/health_check" || c.Path() == "/health-check" {
 				return true
 			}
