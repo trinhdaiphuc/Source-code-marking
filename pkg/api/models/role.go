@@ -12,7 +12,7 @@ type Role struct {
 }
 
 func newRoleCollection(db *mongo.Client) {
-	roleCollection := db.Database("Source-code-marking").Collection("roles")
+	roleCollection := getDatabase(db).Collection("roles")
 
 	roleCollection.InsertMany(context.Background(), []interface{}{
 		Role{ID: 1, Name: "ADMIN"},
@@ -22,6 +22,6 @@ func newRoleCollection(db *mongo.Client) {
 }
 
 func GetRoleCollection(db *mongo.Client) *mongo.Collection {
-	roleCollection := db.Database("Source-code-marking").Collection("roles")
+	roleCollection := getDatabase(db).Collection("roles")
 	return roleCollection
 }
