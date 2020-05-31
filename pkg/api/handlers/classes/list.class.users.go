@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func (h *ClassHandler) ListClassUsers(c echo.Context) (err error) {
@@ -18,38 +18,48 @@ func (h *ClassHandler) ListClassUsers(c echo.Context) (err error) {
 	}
 	classID := c.Param("id")
 	h.Logger.Debug(fmt.Sprintf("List query parameters: %v", listParam))
+	limit := listParam.PageSize
+	page := listParam.PageToken
+	skip := (page - 1) * limit
+
+	opts := []*options.FindOptions{}
 
 	ctx := context.Background()
-	filter := bson.M{"_id": classID}
-	data := &models.Class{}
-	classCollection := models.GetClassCollection(h.DB)
-	result := classCollection.FindOne(ctx, filter)
+	filter := bson.M{
+		"_id": classID,
+	}
 
-	if err = result.Decode(&data); err != nil {
-		if err == mongo.ErrNoDocuments {
-			return &echo.HTTPError{
-				Code:     http.StatusNotFound,
-				Message:  "Not found class",
-				Internal: err,
-			}
-		}
+	switch listParam.FilterValue {
+	case "STUDENT":
+		opts = append(opts, options.Find().SetProjection(bson.D{
+			{"students", bson.D{
+				{"$slice", []interface{}{skip, limit}},
+			}},
+		}))
+	case "TEACHER":
+		opts = append(opts, options.Find().SetProjection(bson.D{
+			{"teachers", bson.D{
+				{"$slice", []interface{}{skip, limit}},
+			}},
+		}))
+	}
+
+	classCollection := models.GetClassCollection(h.DB)
+	cursor, err := classCollection.Find(ctx, filter, opts...)
+
+	if err != nil {
+		h.Logger.Error("Internal error when Find: ", err)
 		return &echo.HTTPError{
 			Code:     http.StatusInternalServerError,
-			Message:  "[ListClassUser] Internal server error",
+			Message:  "[Get all class] Internal server error",
 			Internal: err,
 		}
 	}
 
-	userList := models.ListUser{}
+	classArray := []models.Class{}
+	cursor.All(ctx, &classArray)
 
-	switch listParam.FilterValue {
-	case "STUDENT":
-		userList.Users = data.Students
-		userList.TotalRecords = int64(len(data.Students))
-	case "TEACHER":
-		userList.Users = data.Teachers
-		userList.TotalRecords = int64(len(data.Teachers))
-	}
+	userList := classArray[0].Teachers
 
 	return c.JSON(http.StatusOK, userList)
 }

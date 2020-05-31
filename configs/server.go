@@ -79,8 +79,14 @@ func ConfigureMiddleware(echoServer *EchoServer) (err error) {
 	echoServer.EchoContext.Use(middleware.BodyLimit("64M"))
 
 	// add CORS header in response middleware
+	allowOrigins := []string{}
+	if os.Getenv("ENV") == "production" {
+		allowOrigins = append(allowOrigins, os.Getenv("FRONT_END_SERVER_HOST"))
+	} else {
+		allowOrigins = append(allowOrigins, "*")
+	}
 	echoServer.EchoContext.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"*"},
+		AllowOrigins: allowOrigins,
 		AllowMethods: []string{http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete},
 		AllowHeaders: []string{"*"},
 		ExposeHeaders: []string{

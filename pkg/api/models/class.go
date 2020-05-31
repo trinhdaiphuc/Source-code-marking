@@ -25,7 +25,7 @@ type (
 )
 
 func GetClassCollection(db *mongo.Client) *mongo.Collection {
-	classCollection := db.Database("Source-code-marking").Collection("classes")
+	classCollection := getDatabase(db).Collection("classes")
 	return classCollection
 }
 
