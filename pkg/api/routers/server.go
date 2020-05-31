@@ -28,6 +28,7 @@ func users(e *echo.Echo, h *handlers.Handler) {
 	e.GET("/api/v1/users", h.GetAllUsers)
 	e.PUT("/api/v1/users", h.UpdateUser)
 	e.DELETE("/api/v1/users/:id", h.DeleteUser)
+	e.GET("/api/v1/users/:id/classes", h.ListClasses)
 }
 
 func classes(e *echo.Echo, h *handlers.Handler) {

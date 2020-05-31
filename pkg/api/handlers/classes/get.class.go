@@ -20,7 +20,7 @@ func (h *ClassHandler) GetClass(c echo.Context) (err error) {
 		if err == mongo.ErrNoDocuments {
 			return &echo.HTTPError{
 				Code:     http.StatusNotFound,
-				Message:  "Not found class %v",
+				Message:  "Not found class ",
 				Internal: err,
 			}
 		}

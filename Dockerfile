@@ -10,6 +10,7 @@ ADD . /app/src
 
 WORKDIR /app/src
 
+RUN go mod download
 RUN make build-binary
 
 FROM alpine:3.10

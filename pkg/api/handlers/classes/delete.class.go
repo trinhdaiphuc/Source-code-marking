@@ -26,5 +26,5 @@ func (h *ClassHandler) DeleteClass(c echo.Context) (err error) {
 			Internal: err,
 		}
 	}
-	return
+	return c.NoContent(http.StatusAccepted)
 }

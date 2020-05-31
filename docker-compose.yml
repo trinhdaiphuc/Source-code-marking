@@ -5,11 +5,12 @@ services:
       context: .
     env_file: .env
     restart: always
-    depends_on: [mongo]
+    depends_on: 
+      - mongo
     volumes:
       - .:/app/src
-    ports:
-      - ${PORT}:${PORT}
+    expose:
+      - ${PORT}
     environment:
       DB_HOST: "mongodb://mongo:27017"
 
@@ -22,10 +23,10 @@ services:
       - "27100:27017"
 
   nginx:
-    image: nginx:latest
+    image: nginx:alpine
     build:
-      dockerfile: deployments/Dockerfile
-      context: .
+      context: ./deployments
+      dockerfile: Dockerfile
     volumes:
       - ./deployments/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
