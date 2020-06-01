@@ -3,6 +3,7 @@ package users
 import (
 	"context"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -27,6 +28,7 @@ func (h *UserHandler) Signup(c echo.Context) (err error) {
 			Internal: err,
 		}
 	}
+	u.Service = "EMAIL"
 
 	if err := c.Validate(u); err != nil {
 		return &echo.HTTPError{
@@ -77,8 +79,8 @@ func (h *UserHandler) Signup(c echo.Context) (err error) {
 
 	u.ID = uuid.NewV4().String()
 	u.IsVerified = false
-	u.CreatedAt = time.Now()
-	u.UpdatedAt = time.Now()
+	u.CreatedAt = time.Now().UTC()
+	u.UpdatedAt = time.Now().UTC()
 
 	roleCollection := models.GetRoleCollection(h.DB)
 	result := roleCollection.FindOne(ctx, bson.M{"name": u.Role})
@@ -112,5 +114,15 @@ func (h *UserHandler) Signup(c echo.Context) (err error) {
 		}
 	}
 	u.Password = ""
+	go func() {
+		token, _ := createTokenWithUser(u.ID, u.Role, h.JWTKey)
+		validationLink := c.Request().Host + "api/v1/user/confirmation?confirmation_token=" + token
+		content := "Please click this link to verify your email: " + validationLink
+		subject := "Welcome to Source code marking"
+		err := internal.SendMail(os.Getenv("EMAIL_USERNAME"), os.Getenv("EMAIL_PASSWORD"), u.Email, subject, content)
+		if err != nil {
+			h.Logger.Error("Error when send mail ", err)
+		}
+	}()
 	return c.JSON(http.StatusCreated, u)
 }

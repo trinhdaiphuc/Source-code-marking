@@ -58,3 +58,7 @@ func (h *Handler) DeleteUser(c echo.Context) (err error) {
 func (h *Handler) ListClasses(c echo.Context) (err error) {
 	return h.UserHandler.ListClasses(c)
 }
+
+func (h *Handler) ValidateUser(c echo.Context) (err error) {
+	return h.UserHandler.ValidateUser(c)
+}
