@@ -40,15 +40,25 @@ func (h *UserHandler) signinByEmail(u models.User, userCollection *mongo.Collect
 		}
 	}
 
+	if !user.IsVerified {
+		return nil, &echo.HTTPError{
+			Code:    http.StatusForbidden,
+			Message: "Email has not verified.",
+		}
+	}
+
 	if len(user.Password) == 0 {
 		return nil, &echo.HTTPError{
 			Code:    http.StatusUnauthorized,
-			Message: "You have already signed in with other services. Please use another sign-in method.",
+			Message: "Sign in with wrong method.",
 		}
 	}
 
 	if ok := internal.CheckPasswordHash(u.Password, user.Password); !ok {
-		return nil, &echo.HTTPError{Code: http.StatusUnauthorized, Message: "Password is invalid."}
+		return nil, &echo.HTTPError{
+			Code:    http.StatusUnauthorized,
+			Message: "Password is invalid.",
+		}
 	}
 
 	return user, nil

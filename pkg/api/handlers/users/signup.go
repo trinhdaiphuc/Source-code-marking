@@ -28,7 +28,6 @@ func (h *UserHandler) Signup(c echo.Context) (err error) {
 			Internal: err,
 		}
 	}
-	u.Service = "EMAIL"
 
 	if err := c.Validate(u); err != nil {
 		return &echo.HTTPError{
@@ -116,7 +115,8 @@ func (h *UserHandler) Signup(c echo.Context) (err error) {
 	u.Password = ""
 	go func() {
 		token, _ := createTokenWithUser(u.ID, u.Role, h.JWTKey)
-		validationLink := c.Request().Host + "api/v1/user/confirmation?confirmation_token=" + token
+		validationLink := c.Scheme() + "://" + c.Request().Host + "/api/v1/users/confirmation?confirmation_token=" + token
+		h.Logger.Info("Validation link ", validationLink)
 		content := "Please click this link to verify your email: " + validationLink
 		subject := "Welcome to Source code marking"
 		err := internal.SendMail(os.Getenv("EMAIL_USERNAME"), os.Getenv("EMAIL_PASSWORD"), u.Email, subject, content)

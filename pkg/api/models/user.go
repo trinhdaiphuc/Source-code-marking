@@ -16,7 +16,7 @@ type User struct {
 	Name       string    `json:"name,omitempty" bson:"name,omitempty"`
 	Role       string    `json:"role,omitempty" bson:"role,omitempty" validate:"required"`
 	IsVerified bool      `json:"is_verified" bson:"is_verified"`
-	Service    string    `json:"service" bson:"service,omitempty" validate:"required"`
+	Service    string    `json:"service" bson:"service,omitempty"`
 	CreatedAt  time.Time `json:"created_at,omitempty" bson:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at,omitempty" bson:"updated_at"`
 }

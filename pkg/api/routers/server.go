@@ -24,6 +24,7 @@ func users(e *echo.Echo, h *handlers.Handler) {
 	e.POST("/api/v1/users/signup", h.Signup)
 	e.POST("/api/v1/users/signin", h.Signin)
 	e.GET("/api/v1/users/profile", h.Profile)
+	e.GET("/api/v1/users/confirmation", h.ValidateUser)
 	e.GET("/api/v1/users/:id", h.GetUser)
 	e.GET("/api/v1/users", h.GetAllUsers)
 	e.PUT("/api/v1/users", h.UpdateUser)
