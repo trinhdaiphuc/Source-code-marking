@@ -18,7 +18,7 @@ func configureCORS(echoServer *configs.EchoServer) {
 	}
 	echoServer.EchoContext.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: allowOrigins,
-		AllowMethods: []string{http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete},
+		AllowMethods: []string{http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete, http.MethodPatch},
 		AllowHeaders: []string{"*"},
 		ExposeHeaders: []string{
 			"X-Requested-With", "X-Xss-Protection", "X-Frame-Options",
