@@ -13,6 +13,10 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+func fileExisted(fileCollection *mongo.Collection, userID, exerciseID string, c chan *models.File) {
+
+}
+
 func (h *FileHandler) CreateFile(c echo.Context) (err error) {
 	fileItem := &models.File{}
 	if err := c.Bind(fileItem); err != nil {
@@ -37,12 +41,13 @@ func (h *FileHandler) CreateFile(c echo.Context) (err error) {
 	userToken := c.Get("user").(*jwt.Token)
 	claims := userToken.Claims.(jwt.MapClaims)
 	userID := claims["id"].(string)
+	fileCollection := models.GetFileCollection(h.DB)
 
 	exerciseCollection := models.GetExerciseCollection(h.DB)
 	resultFind := exerciseCollection.FindOne(context.Background(), bson.M{"_id": fileItem.ExerciseID})
 
-	Exercise := &models.Exercise{}
-	if err := resultFind.Decode(&Exercise); err != nil {
+	exercise := &models.Exercise{}
+	if err := resultFind.Decode(&exercise); err != nil {
 		if err == mongo.ErrNoDocuments {
 			return &echo.HTTPError{
 				Code:     http.StatusNotFound,
@@ -57,11 +62,40 @@ func (h *FileHandler) CreateFile(c echo.Context) (err error) {
 		}
 	}
 
+	h.Logger.Debug("Time deadline ", exercise.Deadline.Sub(time.Now()))
+
+	if exercise.Deadline.Sub(time.Now()) < 0 {
+		return &echo.HTTPError{
+			Code:    http.StatusBadRequest,
+			Message: "Over deadline.",
+		}
+	}
+
+	filter := bson.M{"user_id": userID, "exercise_id": fileItem.ExerciseID}
+	result := fileCollection.FindOne(context.Background(), filter)
+
+	data := &models.File{}
+	if err := result.Decode(&data); err != nil {
+		if err != mongo.ErrNoDocuments {
+			return &echo.HTTPError{
+				Code:     http.StatusInternalServerError,
+				Message:  "[GetExercise] Internal server error",
+				Internal: err,
+			}
+		}
+	}
+
+	if data != nil {
+		return &echo.HTTPError{
+			Code:    http.StatusConflict,
+			Message: "File has already existed.",
+		}
+	}
+
 	fileItem.UserID = userID
 	fileItem.CreatedAt = time.Now().UTC()
 	fileItem.UpdatedAt = time.Now().UTC()
 
-	fileCollection := models.GetFileCollection(h.DB)
 	_, err = fileCollection.InsertOne(context.Background(), fileItem)
 
 	if err != nil {

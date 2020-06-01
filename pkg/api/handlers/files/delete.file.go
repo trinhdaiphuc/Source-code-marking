@@ -26,5 +26,5 @@ func (h *FileHandler) DeleteFile(c echo.Context) (err error) {
 			Internal: err,
 		}
 	}
-	return c.NoContent(204)
+	return c.NoContent(http.StatusNoContent)
 }

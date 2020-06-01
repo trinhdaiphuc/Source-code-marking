@@ -15,14 +15,7 @@ func (h *ClassHandler) UnenrollClass(c echo.Context) (err error) {
 	userToken := c.Get("user").(*jwt.Token)
 	claims := userToken.Claims.(jwt.MapClaims)
 	userID := claims["id"].(string)
-	userRole := claims["role"].(string)
 	classID := c.Param("id")
-	if userRole != "STUDENT" {
-		return &echo.HTTPError{
-			Code:    http.StatusForbidden,
-			Message: "Invalid role",
-		}
-	}
 
 	classCollection := models.GetClassCollection(h.DB)
 

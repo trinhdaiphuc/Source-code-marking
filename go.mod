@@ -3,6 +3,7 @@ module github.com/trinhdaiphuc/Source-code-marking
 go 1.13
 
 require (
+	github.com/coreos/etcd v3.3.22+incompatible
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-playground/validator/v10 v10.3.0
 	github.com/joho/godotenv v1.3.0

@@ -114,8 +114,8 @@ func (h *UserHandler) Signup(c echo.Context) (err error) {
 	}
 	u.Password = ""
 	go func() {
-		token, _ := createTokenWithUser(u.ID, u.Role, h.JWTKey)
-		validationLink := c.Scheme() + "://" + c.Request().Host + "/api/v1/users/confirmation?confirmation_token=" + token
+		token, _ := createTokenWithUser(u.ID, u.Role, h.JWTKey, 24)
+		validationLink := os.Getenv("FRONT_END_SERVER_HOST") + "/confirmation?confirmation_token=" + token
 		h.Logger.Info("Validation link ", validationLink)
 		content := "Please click this link to verify your email: " + validationLink
 		subject := "Welcome to Source code marking"

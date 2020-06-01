@@ -18,14 +18,6 @@ func (h *ClassHandler) CreateClass(c echo.Context) (err error) {
 	userToken := c.Get("user").(*jwt.Token)
 	claims := userToken.Claims.(jwt.MapClaims)
 	userID := claims["id"].(string)
-	userRole := claims["role"].(string)
-
-	if userRole != "TEACHER" {
-		return &echo.HTTPError{
-			Code:    http.StatusForbidden,
-			Message: "Invalid role",
-		}
-	}
 
 	if err := c.Bind(classItem); err != nil {
 		return &echo.HTTPError{

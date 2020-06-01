@@ -42,7 +42,7 @@ func (h *UserHandler) signinByEmail(u models.User, userCollection *mongo.Collect
 
 	if !user.IsVerified {
 		return nil, &echo.HTTPError{
-			Code:    http.StatusForbidden,
+			Code:    http.StatusUnauthorized,
 			Message: "Email has not verified.",
 		}
 	}
@@ -155,7 +155,7 @@ func (h *UserHandler) Signin(c echo.Context) (err error) {
 	}
 
 	// Generate encoded token and send it as response
-	tokenString, err := createTokenWithUser(user.ID, user.Role, h.JWTKey)
+	tokenString, err := createTokenWithUser(user.ID, user.Role, h.JWTKey, 24)
 	if err != nil {
 		return err
 	}
