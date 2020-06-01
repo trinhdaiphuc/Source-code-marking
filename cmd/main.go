@@ -12,6 +12,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/trinhdaiphuc/Source-code-marking/configs"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/handlers"
+	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/middlewares"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/routers"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -33,7 +34,8 @@ func main() {
 	configs.LoggerConfig(echoServer)
 
 	// configsure middleware
-	err = configs.ConfigureMiddleware(echoServer)
+	err = middlewares.ConfigureMiddleware(echoServer)
+
 	if err != nil {
 		echoServer.Logger.Error("Error when configsure middleware ", err)
 	}

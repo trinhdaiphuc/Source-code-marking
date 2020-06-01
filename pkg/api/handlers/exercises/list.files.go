@@ -55,6 +55,10 @@ func (h *ExerciseHandler) ListFiles(c echo.Context) (err error) {
 
 	filter := bson.M{"exercise_id": exerciseID}
 
+	if listParam.FilterBy != "" && listParam.FilterValue != "" {
+		filter[listParam.FilterBy] = listParam.FilterValue
+	}
+
 	fileCollection := models.GetFileCollection(h.DB)
 	ctx := context.Background()
 	cursor, err := fileCollection.Find(ctx, filter, opts...)

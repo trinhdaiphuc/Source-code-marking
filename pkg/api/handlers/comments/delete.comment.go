@@ -35,5 +35,5 @@ func (h *CommentHandler) DeleteComment(c echo.Context) (err error) {
 			Internal: err,
 		}
 	}
-	return c.NoContent(204)
+	return c.NoContent(http.StatusNoContent)
 }
