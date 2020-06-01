@@ -36,6 +36,7 @@ type (
 		UpdateUser(c echo.Context) (err error)
 		DeleteUser(c echo.Context) (err error)
 		ListClasses(c echo.Context) (err error)
+		ValidateUser(c echo.Context) (err error)
 	}
 
 	// ClassInterface is a interface for handle all class logic
@@ -65,6 +66,7 @@ type (
 	FileInterface interface {
 		CreateFile(c echo.Context) (err error)
 		UpdateFile(c echo.Context) (err error)
+		MarkFile(c echo.Context) (err error)
 		GetFile(c echo.Context) (err error)
 		GetAllFiles(c echo.Context) (err error)
 		DeleteFile(c echo.Context) (err error)

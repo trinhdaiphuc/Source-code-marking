@@ -3,6 +3,7 @@ package users
 import (
 	"context"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -19,9 +20,23 @@ func (h *UserHandler) Signup(c echo.Context) (err error) {
 
 	// Bind
 	u := &models.User{}
-	if err = c.Bind(u); err != nil {
-		return
+
+	if err := c.Bind(u); err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusBadRequest,
+			Message:  "Invalid arguments error",
+			Internal: err,
+		}
 	}
+
+	if err := c.Validate(u); err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusBadRequest,
+			Message:  "Invalid arguments error",
+			Internal: err,
+		}
+	}
+
 	h.Logger.Debug("Sign-up parameters: ", *u)
 	// Validate
 	if u.Email == "" || len(u.Password) < 6 {
@@ -62,8 +77,9 @@ func (h *UserHandler) Signup(c echo.Context) (err error) {
 	}
 
 	u.ID = uuid.NewV4().String()
-	u.CreatedAt = time.Now()
-	u.UpdatedAt = time.Now()
+	u.IsVerified = false
+	u.CreatedAt = time.Now().UTC()
+	u.UpdatedAt = time.Now().UTC()
 
 	roleCollection := models.GetRoleCollection(h.DB)
 	result := roleCollection.FindOne(ctx, bson.M{"name": u.Role})
@@ -86,8 +102,6 @@ func (h *UserHandler) Signup(c echo.Context) (err error) {
 		}
 	}
 
-	h.Logger.Debug("UUID ", u)
-
 	// Save user
 	_, err = userCollection.InsertOne(context.Background(), u)
 	if err != nil {
@@ -99,5 +113,16 @@ func (h *UserHandler) Signup(c echo.Context) (err error) {
 		}
 	}
 	u.Password = ""
+	go func() {
+		token, _ := createTokenWithUser(u.ID, u.Role, h.JWTKey, 24)
+		validationLink := os.Getenv("FRONT_END_SERVER_HOST") + "/confirmation?confirmation_token=" + token
+		h.Logger.Info("Validation link ", validationLink)
+		content := "Please click this link to verify your email: " + validationLink
+		subject := "Welcome to Source code marking"
+		err := internal.SendMail(os.Getenv("EMAIL_USERNAME"), os.Getenv("EMAIL_PASSWORD"), u.Email, subject, content)
+		if err != nil {
+			h.Logger.Error("Error when send mail ", err)
+		}
+	}()
 	return c.JSON(http.StatusCreated, u)
 }

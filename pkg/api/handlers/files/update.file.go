@@ -57,6 +57,34 @@ func (h *FileHandler) UpdateFile(c echo.Context) (err error) {
 		}
 	}
 
+	exerciseCollection := models.GetExerciseCollection(h.DB)
+	resultFind = exerciseCollection.FindOne(context.Background(), bson.M{"_id": data.ExerciseID})
+
+	exercise := &models.Exercise{}
+	if err := resultFind.Decode(&exercise); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return &echo.HTTPError{
+				Code:     http.StatusNotFound,
+				Message:  "Not found Exercise",
+				Internal: err,
+			}
+		}
+		return &echo.HTTPError{
+			Code:     http.StatusInternalServerError,
+			Message:  "[GetExercise] Internal server error",
+			Internal: err,
+		}
+	}
+
+	h.Logger.Debug("Time deadline ", exercise.Deadline.Sub(time.Now()))
+
+	if exercise.Deadline.Sub(time.Now()) < 0 {
+		return &echo.HTTPError{
+			Code:    http.StatusBadRequest,
+			Message: "Over deadline.",
+		}
+	}
+
 	update := bson.M{
 		"$set": bson.M{
 			"name":       file.Name,

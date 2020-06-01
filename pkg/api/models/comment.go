@@ -7,9 +7,9 @@ import (
 type (
 	Comment struct {
 		ID        string    `json:"id,omitempty" bson:"_id"`
-		FileID    string    `json:"file_id" bson:"file_id"`
+		FileID    string    `json:"file_id" bson:"file_id" validate:"required"`
 		UserID    string    `json:"user_id" bson:"user_id"`
-		Content   string    `json:"content" bson:"content"`
+		Content   string    `json:"content" bson:"content" validate:"required"`
 		StartLine Position  `json:"start_line,omitempty" bson:"start_line,omitempty"`
 		EndLine   Position  `json:"end_line,omitempty" bson:"end_line,omitempty"`
 		CreatedAt time.Time `json:"created_at,omitempty" bson:"created_at"`

@@ -3,24 +3,21 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-
-	"net/http"
-
 	"github.com/joho/godotenv"
 	"github.com/trinhdaiphuc/Source-code-marking/configs"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/handlers"
+	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/middlewares"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/routers"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
-
-// Golbal variablesfor db connection
 
 func main() {
 	echoServer := configs.NewEchoServer()
@@ -37,7 +34,8 @@ func main() {
 	configs.LoggerConfig(echoServer)
 
 	// configsure middleware
-	err = configs.ConfigureMiddleware(echoServer)
+	err = middlewares.ConfigureMiddleware(echoServer)
+
 	if err != nil {
 		echoServer.Logger.Error("Error when configsure middleware ", err)
 	}
@@ -66,6 +64,7 @@ func main() {
 	// configsure HTTP error handler
 	echoServer.EchoContext.HTTPErrorHandler = h.CustomHTTPErrorHandler
 
+	echoServer.EchoContext.Validator = models.NewValidator()
 	// configs routing server
 	routers.Routing(echoServer.EchoContext, h)
 

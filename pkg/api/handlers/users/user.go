@@ -32,10 +32,10 @@ func NewUserHandler(logger *internal.AppLog, jwtKey string, db *mongo.Client) (u
 	return
 }
 
-func createTokenWithUser(userID, role, JwtKey string) (string, error) {
+func createTokenWithUser(userID, role, JwtKey string, expireTime int) (string, error) {
 	// Declare the expiration time of the token
 	// here, we have kept it as 24 hours
-	expirationTime := time.Now().Add(24 * time.Hour)
+	expirationTime := time.Now().Add(time.Duration(expireTime) * time.Hour)
 
 	// Create the JWT claims, which includes the username and expiry time
 	claims := &Claims{

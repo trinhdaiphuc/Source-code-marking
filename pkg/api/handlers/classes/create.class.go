@@ -18,16 +18,16 @@ func (h *ClassHandler) CreateClass(c echo.Context) (err error) {
 	userToken := c.Get("user").(*jwt.Token)
 	claims := userToken.Claims.(jwt.MapClaims)
 	userID := claims["id"].(string)
-	userRole := claims["role"].(string)
 
-	if userRole != "TEACHER" {
+	if err := c.Bind(classItem); err != nil {
 		return &echo.HTTPError{
-			Code:    http.StatusForbidden,
-			Message: "Invalid role",
+			Code:     http.StatusBadRequest,
+			Message:  "Invalid arguments error",
+			Internal: err,
 		}
 	}
 
-	if err := c.Bind(classItem); err != nil {
+	if err := c.Validate(classItem); err != nil {
 		return &echo.HTTPError{
 			Code:     http.StatusBadRequest,
 			Message:  "Invalid arguments error",

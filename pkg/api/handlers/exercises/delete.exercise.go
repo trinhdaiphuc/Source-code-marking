@@ -22,5 +22,5 @@ func (h *ExerciseHandler) DeleteExercise(c echo.Context) (err error) {
 			Internal: err,
 		}
 	}
-	return c.NoContent(204)
+	return c.NoContent(http.StatusNoContent)
 }

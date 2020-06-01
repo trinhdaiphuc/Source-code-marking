@@ -5,6 +5,19 @@ import "github.com/labstack/echo/v4"
 /////////////////////////////////////////////////////////
 // TODO User handler
 /////////////////////////////////////////////////////////
+// ShowAccount godoc
+// @Summary Show a account
+// @Description get string by ID
+// @ID get-string-by-int
+// @Accept  json
+// @Produce  json
+// @Param id path int true "Account ID"
+// @Success 200 {object} model.Account
+// @Header 200 {string} Token "qwerty"
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 404 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Router /accounts/{id} [get]
 
 // Signup an account
 func (h *Handler) Signup(c echo.Context) (err error) {
@@ -44,4 +57,8 @@ func (h *Handler) DeleteUser(c echo.Context) (err error) {
 // ListClasses is a user information
 func (h *Handler) ListClasses(c echo.Context) (err error) {
 	return h.UserHandler.ListClasses(c)
+}
+
+func (h *Handler) ValidateUser(c echo.Context) (err error) {
+	return h.UserHandler.ValidateUser(c)
 }

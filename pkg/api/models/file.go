@@ -9,10 +9,10 @@ import (
 type File struct {
 	ID         string    `json:"id,omitempty" bson:"_id"`
 	UserID     string    `json:"user_id,omitempty" bson:"user_id,omitempty"`
-	ExerciseID string    `json:"exercise_id,omitempty" bson:"exercise_id,omitempty"`
+	ExerciseID string    `json:"exercise_id,omitempty" bson:"exercise_id,omitempty" validate:"required"`
 	Name       string    `json:"name,omitempty" bson:"name,omitempty"`
-	Data       string    `json:"data" bson:"data"`
-	Mark       float32   `json:"mark,omitempty" bson:"mark,omitempty"`
+	Data       string    `json:"data" bson:"data" validate:"required"`
+	Mark       float32   `json:"mark,omitempty" bson:"mark,omitempty" validate:"gte=0,lte=10"`
 	Comments   []Comment `json:"comments,omitempty" bson:"comments,omitempty"`
 	CreatedAt  time.Time `json:"created_at,omitempty" bson:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at,omitempty" bson:"updated_at"`

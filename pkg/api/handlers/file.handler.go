@@ -16,6 +16,11 @@ func (h *Handler) UpdateFile(c echo.Context) (err error) {
 	return h.FileHandler.UpdateFile(c)
 }
 
+// MarkFile mark a file in an exercise
+func (h *Handler) MarkFile(c echo.Context) (err error) {
+	return h.FileHandler.MarkFile(c)
+}
+
 // GetFile get a file in an exercise
 func (h *Handler) GetFile(c echo.Context) (err error) {
 	return h.FileHandler.GetFile(c)
