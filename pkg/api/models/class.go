@@ -9,7 +9,7 @@ import (
 type (
 	Class struct {
 		ID          string    `json:"id,omitempty" bson:"_id"`
-		Name        string    `json:"name" bson:"name"`
+		Name        string    `json:"name" bson:"name" validate:"required"`
 		Description string    `json:"description" bson:"description"`
 		Teachers    []User    `json:"teachers" bson:"teachers"`
 		Students    []User    `json:"students,omitempty" bson:"students,omitempty"`

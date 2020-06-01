@@ -16,9 +16,23 @@ import (
 
 func (h *ClassHandler) ListExercises(c echo.Context) (err error) {
 	listParam := &models.ListQueryParam{}
-	if err = c.Bind(listParam); err != nil {
-		return
+
+	if err := c.Bind(listParam); err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusBadRequest,
+			Message:  "Invalid arguments error",
+			Internal: err,
+		}
 	}
+
+	if err := c.Validate(listParam); err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusBadRequest,
+			Message:  "Invalid arguments error",
+			Internal: err,
+		}
+	}
+
 	h.Logger.Debug(fmt.Sprintf("List query parameters: %v", listParam))
 	limit := listParam.PageSize
 	page := listParam.PageToken
@@ -42,9 +56,9 @@ func (h *ClassHandler) ListExercises(c echo.Context) (err error) {
 	opts = append(opts, options.Find().SetLimit(limit))
 
 	filter := bson.M{"class_id": classID}
-	classCollection := models.GetClassCollection(h.DB)
+	exerciseCollection := models.GetExerciseCollection(h.DB)
 	ctx := context.Background()
-	cursor, err := classCollection.Find(ctx, filter, opts...)
+	cursor, err := exerciseCollection.Find(ctx, filter, opts...)
 
 	if err != nil {
 		h.Logger.Error("Internal error when Find: ", err)
@@ -55,7 +69,7 @@ func (h *ClassHandler) ListExercises(c echo.Context) (err error) {
 		}
 	}
 
-	totalRecords, err := classCollection.CountDocuments(ctx, filter)
+	totalRecords, err := exerciseCollection.CountDocuments(ctx, filter)
 
 	if cursor == nil {
 		status.New(codes.FailedPrecondition, "No books have been created")
@@ -64,7 +78,7 @@ func (h *ClassHandler) ListExercises(c echo.Context) (err error) {
 	// An expression with defer will be called at the end of the function
 	defer cursor.Close(ctx)
 
-	classArray := []models.Class{}
-	cursor.All(ctx, &classArray)
-	return c.JSON(http.StatusOK, models.ConvertClassArrayToListClass(classArray, page+1, totalRecords))
+	exerciseArray := []models.Exercise{}
+	cursor.All(ctx, &exerciseArray)
+	return c.JSON(http.StatusOK, models.ConvertExerciseArrayToListExercise(exerciseArray, page+1, totalRecords))
 }
