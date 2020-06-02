@@ -85,7 +85,7 @@ func (h *FileHandler) CreateFile(c echo.Context) (err error) {
 		}
 	}
 
-	if data != nil {
+	if data.ID != "" {
 		return &echo.HTTPError{
 			Code:    http.StatusConflict,
 			Message: "File has already existed.",
