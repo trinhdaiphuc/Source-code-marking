@@ -119,9 +119,11 @@ func (h *UserHandler) Signup(c echo.Context) (err error) {
 		h.Logger.Info("Validation link ", validationLink)
 		content := "Please click this link to verify your email: " + validationLink
 		subject := "Welcome to Source code marking"
-		err := internal.SendMail(os.Getenv("EMAIL_USERNAME"), os.Getenv("EMAIL_PASSWORD"), u.Email, subject, content)
+		id, err := internal.SendMail(os.Getenv("EMAIL_USERNAME"), u.Email, subject, content)
 		if err != nil {
 			h.Logger.Error("Error when send mail ", err)
+		} else {
+			h.Logger.Info("Send mail success with id ", id)
 		}
 	}()
 	return c.JSON(http.StatusCreated, u)
