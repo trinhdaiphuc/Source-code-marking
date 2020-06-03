@@ -15,8 +15,8 @@ func (h *FileHandler) GetFile(c echo.Context) (err error) {
 	// Get param
 	fileID := c.Param("id")
 
-	userCollection := models.GetFileCollection(h.DB)
-	resultFind := userCollection.FindOne(context.Background(), bson.M{"_id": fileID})
+	fileCollection := models.GetFileCollection(h.DB)
+	resultFind := fileCollection.FindOne(context.Background(), bson.M{"_id": fileID})
 
 	file := &models.File{}
 	if err := resultFind.Decode(&file); err != nil {

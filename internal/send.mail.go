@@ -1,7 +1,9 @@
 package internal
 
 import (
-	"net/smtp"
+	"os"
+
+	"github.com/mailgun/mailgun-go"
 )
 
 type smtpServer struct {
@@ -15,16 +17,9 @@ func (s *smtpServer) Address() string {
 }
 
 // SendMail send an email from user to another users
-func SendMail(from, password, to string, subject, content string) (err error) {
-	// smtp server configuration.
-	smtpServer := smtpServer{host: "smtp.gmail.com", port: "587"}
-	// Message.
-	message := []byte("To: bigphuc1@gmail.com\r\n" + "Subject: " + subject + "\r\n" + "\r\n" + content + "\r\n")
-	// Authentication.
-	auth := smtp.PlainAuth("", from, password, smtpServer.host)
-	toUser := []string{to}
-	// Sending email.
-	err = smtp.SendMail(smtpServer.Address(), auth, from, toUser, message)
-
-	return
+func SendMail(from, to, subject, content string) (id string, err error) {
+	mg := mailgun.NewMailgun(os.Getenv("EMAIL_MAILGUN_DOMAIN"), os.Getenv("EMAIL_MAILGUN_API_KEY"))
+	m := mg.NewMessage(os.Getenv("EMAIL_USERNAME"), subject, content, to)
+	_, id, err = mg.Send(m)
+	return id, err
 }
