@@ -49,8 +49,8 @@ func exercises(e *echo.Echo, h *handlers.Handler) {
 	e.POST("/api/v1/exercises", h.CreateExercise, middlewares.IsTeacher)
 	e.GET("/api/v1/exercises/:id", h.GetExercise)
 	e.GET("/api/v1/exercises", h.GetAllExercises)
-	e.PUT("/api/v1/exercises/:id", h.UpdateExercise, middlewares.IsStudent)
-	e.DELETE("/api/v1/exercises/:id", h.DeleteExercise, middlewares.IsStudent)
+	e.PUT("/api/v1/exercises/:id", h.UpdateExercise, middlewares.IsTeacher)
+	e.DELETE("/api/v1/exercises/:id", h.DeleteExercise, middlewares.IsTeacher)
 	e.GET("/api/v1/exercises/:id/files", h.ListFiles)
 }
 

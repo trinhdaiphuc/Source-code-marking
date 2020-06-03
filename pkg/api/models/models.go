@@ -33,7 +33,7 @@ func NewModelDB(db *mongo.Client) {
 }
 
 func getDatabase(db *mongo.Client) (database *mongo.Database) {
-	return db.Database(os.Getenv("DATABASE_NAME"))
+	return db.Database(os.Getenv("DB_NAME"))
 }
 
 func (cv *CustomValidator) Validate(i interface{}) error {
