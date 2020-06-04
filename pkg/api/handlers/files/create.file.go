@@ -13,10 +13,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func fileExisted(fileCollection *mongo.Collection, userID, exerciseID string, c chan *models.File) {
-
-}
-
 func (h *FileHandler) CreateFile(c echo.Context) (err error) {
 	fileItem := &models.File{}
 	if err := c.Bind(fileItem); err != nil {

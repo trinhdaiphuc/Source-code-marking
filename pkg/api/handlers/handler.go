@@ -37,6 +37,8 @@ type (
 		DeleteUser(c echo.Context) (err error)
 		ListClasses(c echo.Context) (err error)
 		ValidateUser(c echo.Context) (err error)
+		ForgetPassword(c echo.Context) (err error)
+		ResetPassword(c echo.Context) (err error)
 	}
 
 	// ClassInterface is a interface for handle all class logic
