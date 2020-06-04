@@ -9,23 +9,29 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type User struct {
-	ID         string    `json:"id,omitempty" bson:"_id,omitempty"`
-	Email      string    `json:"email" bson:"email" validate:"required,email"`
-	Password   string    `json:"password,omitempty" bson:"password,omitempty"`
-	Name       string    `json:"name,omitempty" bson:"name,omitempty"`
-	Role       string    `json:"role,omitempty" bson:"role,omitempty" validate:"required"`
-	IsVerified bool      `json:"is_verified" bson:"is_verified"`
-	Service    string    `json:"service" bson:"service,omitempty"`
-	CreatedAt  time.Time `json:"created_at,omitempty" bson:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at,omitempty" bson:"updated_at"`
-}
+type (
+	User struct {
+		ID         string    `json:"id,omitempty" bson:"_id,omitempty"`
+		Email      string    `json:"email" bson:"email" validate:"required,email"`
+		Password   string    `json:"password,omitempty" bson:"password,omitempty"`
+		Name       string    `json:"name,omitempty" bson:"name,omitempty"`
+		Role       string    `json:"role,omitempty" bson:"role,omitempty" validate:"required"`
+		IsVerified bool      `json:"is_verified" bson:"is_verified"`
+		Service    string    `json:"service" bson:"service,omitempty"`
+		CreatedAt  time.Time `json:"created_at,omitempty" bson:"created_at"`
+		UpdatedAt  time.Time `json:"updated_at,omitempty" bson:"updated_at"`
+	}
 
-type ListUser struct {
-	Users         []User `json:"users"`
-	NextPageToken int64  `json:"next_page_token"`
-	TotalRecords  int64  `json:"total_records"`
-}
+	ListUser struct {
+		Users         []User `json:"users"`
+		NextPageToken int64  `json:"next_page_token"`
+		TotalRecords  int64  `json:"total_records"`
+	}
+
+	ResetPassword struct {
+		Password string `json:"password" validate:"required,min=6"`
+	}
+)
 
 func newUserCollection(db *mongo.Client) {
 	// Create indexs

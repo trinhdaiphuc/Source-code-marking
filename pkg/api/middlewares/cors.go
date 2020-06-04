@@ -22,7 +22,7 @@ func configureCORS(echoServer *configs.EchoServer) {
 		AllowHeaders: []string{"*"},
 		ExposeHeaders: []string{
 			"X-Requested-With", "X-Xss-Protection", "X-Frame-Options",
-			"Content-Length", "X-Content-Type-Options", "Origin",
+			"Content-Length", "X-Content-Type-Options", "Origin", "Upgrade",
 			"Content-Type", "Accept", "Authorization", "Access-Token", "Refresh-Token",
 		},
 	}))
