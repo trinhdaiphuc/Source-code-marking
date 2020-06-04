@@ -46,10 +46,30 @@ func (h *ClassHandler) EnrollClass(c echo.Context) (err error) {
 			},
 		},
 	}
-	filter := bson.M{"_id": classID}
+	filter := bson.M{"_id": classID, "students._id": user.ID}
 	data := &models.Class{}
-
 	ctx := context.Background()
+
+	result = classCollection.FindOne(ctx, filter)
+	err = result.Decode(&data)
+	if err != nil {
+		if err != mongo.ErrNoDocuments {
+			return &echo.HTTPError{
+				Code:     http.StatusNotFound,
+				Message:  "Not found class",
+				Internal: err,
+			}
+		}
+	}
+	if data.ID != "" {
+		return &echo.HTTPError{
+			Code:     http.StatusConflict,
+			Message:  "Already enroll",
+			Internal: err,
+		}
+	}
+
+	filter = bson.M{"_id": classID}
 	result = classCollection.FindOneAndUpdate(ctx, filter, update, options.FindOneAndUpdate().SetReturnDocument(1))
 	err = result.Decode(&data)
 	if err != nil {

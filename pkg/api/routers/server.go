@@ -13,6 +13,7 @@ func Routing(e *echo.Echo, h *handlers.Handler) {
 	exercises(e, h)
 	files(e, h)
 	comments(e, h)
+	webSocketNotification(e, h)
 }
 
 func landingPage(e *echo.Echo, h *handlers.Handler) {
@@ -72,4 +73,8 @@ func comments(e *echo.Echo, h *handlers.Handler) {
 	e.GET("/api/v1/comments", h.GetAllComments)
 	e.PUT("/api/v1/comments/:id", h.UpdateComment, middlewares.IsTeacher)
 	e.DELETE("/api/v1/comments/:id", h.DeleteComment, middlewares.IsTeacher)
+}
+
+func webSocketNotification(e *echo.Echo, h *handlers.Handler) {
+	e.GET("/api/v1/ws", h.WebsocketNotification)
 }

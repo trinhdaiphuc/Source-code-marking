@@ -1,7 +1,7 @@
 FROM golang:1.13.4-alpine3.10 AS build
 
-RUN apk update && apk add --virtual build-dependencies build-base --no-cache curl \
-  ca-certificates gcc autoconf automake libtool
+RUN apk update && apk add --virtual build-dependencies build-base --no-cache \
+  autoconf automake
 
 ENV GOROOT=/usr/local/go \
   GOPATH=/app

@@ -72,6 +72,13 @@ func (h *UserHandler) signinByThirdparty(u *models.User, userCollection *mongo.C
 		}
 	}
 
+	if !(u.Role == "STUDENT" || u.Role == "TEACHER" || u.Role == "ADMIN") {
+		return nil, &echo.HTTPError{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid arguments: missing role",
+		}
+	}
+
 	result := userCollection.FindOne(context.Background(), bson.M{"email": u.Email})
 
 	data := &models.User{}
@@ -102,6 +109,13 @@ func (h *UserHandler) signinByThirdparty(u *models.User, userCollection *mongo.C
 			Code:     http.StatusBadRequest,
 			Message:  "[Signin] Internal server error",
 			Internal: err,
+		}
+	}
+
+	if data.Role != u.Role {
+		return nil, &echo.HTTPError{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid role",
 		}
 	}
 
@@ -155,7 +169,7 @@ func (h *UserHandler) Signin(c echo.Context) (err error) {
 	}
 
 	// Generate encoded token and send it as response
-	tokenString, err := createTokenWithUser(user.ID, user.Role, h.JWTKey, 24)
+	tokenString, err := createTokenWithUser(*user, h.JWTKey, 24)
 	if err != nil {
 		return err
 	}

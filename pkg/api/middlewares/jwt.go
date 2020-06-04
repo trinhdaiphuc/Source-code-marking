@@ -17,7 +17,7 @@ func configureJWT(echoServer *configs.EchoServer) {
 			if (c.Request().Method == "POST" && (c.Path() == "/api/v1/users/signin" || c.Path() == "/api/v1/users/signup")) ||
 				(c.Request().Method == "GET" &&
 					(c.Path() == "/api/v1/users/password" || c.Path() == "/api/v1/users/confirmation" ||
-						c.Path() == "/" || c.Path() == "/metrics" ||
+						c.Path() == "/api/v1/ws" || c.Path() == "/" || c.Path() == "/metrics" ||
 						c.Path() == "/health_check" || c.Path() == "/health-check")) {
 				return true
 			}

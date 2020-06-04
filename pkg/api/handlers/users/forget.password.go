@@ -13,7 +13,7 @@ import (
 )
 
 func sendResetPasswordEmail(user models.User, jwtKey string, logger *internal.AppLog) {
-	token, _ := createTokenWithUser(user.ID, user.Role, jwtKey, 24)
+	token, _ := createTokenWithUser(user, jwtKey, 24)
 	validationLink := os.Getenv("FRONT_END_SERVER_HOST") + "/password/" + token
 	logger.Info("Validation link ", validationLink)
 	content := "Please click this link to reset your password " + validationLink

@@ -3,12 +3,15 @@ package handlers
 import (
 	"os"
 
+	"github.com/go-redis/redis/v8"
+	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 	"github.com/trinhdaiphuc/Source-code-marking/internal"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/handlers/classes"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/handlers/comments"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/handlers/exercises"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/handlers/files"
+	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/handlers/notifications"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/handlers/users"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -16,14 +19,17 @@ import (
 type (
 	// Handler struct for handle all api logic
 	Handler struct {
-		DB              *mongo.Client
-		Logger          *internal.AppLog
-		JWTKey          string
-		UserHandler     UserInterface
-		FileHandler     FileInterface
-		CommentHandler  CommentInterface
-		ClassHandler    ClassInterface
-		ExerciseHandler ExercisesInterface
+		DB               *mongo.Client
+		Logger           *internal.AppLog
+		JWTKey           string
+		RedisClient      *redis.Client
+		WebsocketClients map[*websocket.Conn]string
+		UserHandler      UserInterface
+		FileHandler      FileInterface
+		CommentHandler   CommentInterface
+		ClassHandler     ClassInterface
+		ExerciseHandler  ExercisesInterface
+		Notification     NotificationInterface
 	}
 
 	// UserInterface is a interface for handle all user logic
@@ -83,21 +89,30 @@ type (
 		GetAllComments(c echo.Context) (err error)
 		DeleteComment(c echo.Context) (err error)
 	}
+
+	// NotificationInterface is a interface for handle all notification logic
+	NotificationInterface interface {
+		WebsocketNotification(c echo.Context) (err error)
+	}
 )
 
 // NewHandlers create a handler pointer
-func NewHandlers(db *mongo.Client, logger *internal.AppLog) (h *Handler) {
+func NewHandlers(db *mongo.Client, logger *internal.AppLog, redisClient *redis.Client) (h *Handler) {
 	h = &Handler{
-		DB:     db,
-		JWTKey: os.Getenv("SECRET_KEY"),
-		Logger: logger,
+		DB:          db,
+		JWTKey:      os.Getenv("SECRET_KEY"),
+		Logger:      logger,
+		RedisClient: redisClient,
 	}
 
+	h.WebsocketClients = make(map[*websocket.Conn]string)
+
 	h.UserHandler = users.NewUserHandler(logger, h.JWTKey, db)
-	h.FileHandler = files.NewFileHandler(logger, db)
+	h.FileHandler = files.NewFileHandler(logger, db, h.RedisClient)
 	h.CommentHandler = comments.NewCommentHandler(logger, db)
 	h.ClassHandler = classes.NewClassHandler(logger, db)
-	h.ExerciseHandler = exercises.NewExerciseHandler(logger, db)
+	h.ExerciseHandler = exercises.NewExerciseHandler(logger, db, h.RedisClient)
+	h.Notification = notifications.NewNotificationHandler(logger, db, h.RedisClient, h.WebsocketClients)
 
 	return
 }
