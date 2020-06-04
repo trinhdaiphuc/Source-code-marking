@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	uuid "github.com/satori/go.uuid"
+	"github.com/trinhdaiphuc/Source-code-marking/internal"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -42,8 +44,21 @@ func newUserCollection(db *mongo.Client) {
 		// create UniqueIndex option
 		Options: options.Index().SetUnique(true),
 	}
+	ctx := context.Background()
 	userCollection := getDatabase(db).Collection("users")
-	userCollection.Indexes().CreateOne(context.Background(), mod)
+	userCollection.Indexes().CreateOne(ctx, mod)
+	password, _ := internal.HashPassword("phucdeptrai")
+	admin := &User{
+		ID:         uuid.NewV4().String(),
+		Email:      "admin@gmail.com",
+		Password:   password,
+		Name:       "admin",
+		Role:       "ADMIN",
+		IsVerified: true,
+		CreatedAt:  time.Now().UTC(),
+		UpdatedAt:  time.Now().UTC(),
+	}
+	userCollection.InsertOne(ctx, admin)
 }
 
 func GetUserCollection(db *mongo.Client) *mongo.Collection {

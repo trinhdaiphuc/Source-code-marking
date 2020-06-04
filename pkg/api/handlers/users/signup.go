@@ -15,7 +15,7 @@ import (
 )
 
 func sendValidationMail(u models.User, jwtKey string, logger *internal.AppLog) {
-	token, _ := createTokenWithUser(u.ID, u.Role, jwtKey, 24)
+	token, _ := createTokenWithUser(u, jwtKey, 24)
 	validationLink := os.Getenv("FRONT_END_SERVER_HOST") + "/confirmation/" + token
 	logger.Info("Validation link ", validationLink)
 	content := "Please click this link to verify your email: " + validationLink
