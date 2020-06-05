@@ -47,6 +47,13 @@ func (h *UserHandler) signinByEmail(u models.User, userCollection *mongo.Collect
 		}
 	}
 
+	if user.IsDeleted {
+		return nil, &echo.HTTPError{
+			Code:    http.StatusGone,
+			Message: "Email has been deleted.",
+		}
+	}
+
 	if len(user.Password) == 0 {
 		return nil, &echo.HTTPError{
 			Code:    http.StatusUnauthorized,
@@ -72,10 +79,10 @@ func (h *UserHandler) signinByThirdparty(u *models.User, userCollection *mongo.C
 		}
 	}
 
-	if !(u.Role == "STUDENT" || u.Role == "TEACHER" || u.Role == "ADMIN") {
+	if !(u.Role == "STUDENT" || u.Role == "TEACHER") {
 		return nil, &echo.HTTPError{
 			Code:    http.StatusBadRequest,
-			Message: "Invalid arguments: missing role",
+			Message: "Invalid arguments: role",
 		}
 	}
 
@@ -90,6 +97,7 @@ func (h *UserHandler) signinByThirdparty(u *models.User, userCollection *mongo.C
 				Name:       u.Name,
 				IsVerified: true,
 				Role:       u.Role,
+				IsDeleted:  false,
 				CreatedAt:  time.Now().UTC(),
 				UpdatedAt:  time.Now().UTC(),
 			}
@@ -116,6 +124,13 @@ func (h *UserHandler) signinByThirdparty(u *models.User, userCollection *mongo.C
 		return nil, &echo.HTTPError{
 			Code:    http.StatusBadRequest,
 			Message: "Invalid role",
+		}
+	}
+
+	if data.IsDeleted {
+		return nil, &echo.HTTPError{
+			Code:    http.StatusGone,
+			Message: "Email has been deleted.",
 		}
 	}
 

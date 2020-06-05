@@ -37,12 +37,14 @@ func (h *ClassHandler) CreateClass(c echo.Context) (err error) {
 
 	user := models.User{}
 	userCollection := models.GetUserCollection(h.DB)
-	result := userCollection.FindOne(context.Background(), bson.M{"_id": userID})
+	filter := bson.M{"_id": userID, "is_deleted": false}
+
+	result := userCollection.FindOne(context.Background(), filter)
 	if err := result.Decode(&user); err != nil {
 		if err == mongo.ErrNoDocuments {
 			return &echo.HTTPError{
 				Code:     http.StatusNotFound,
-				Message:  "Not found user",
+				Message:  "Not found user or user is deleted",
 				Internal: err,
 			}
 		}
@@ -55,6 +57,7 @@ func (h *ClassHandler) CreateClass(c echo.Context) (err error) {
 	user.Password = ""
 	classItem.ID = uuid.NewV4().String()
 	classItem.Teachers = []models.User{user}
+	classItem.IsDeleted = false
 	classItem.CreatedAt = time.Now().UTC()
 	classItem.UpdatedAt = time.Now().UTC()
 

@@ -35,6 +35,7 @@ func (h *CommentHandler) CreateComment(c echo.Context) (err error) {
 	h.Logger.Debug("Create comments parameters ", commentItem)
 
 	commentItem.ID = uuid.NewV4().String()
+	commentItem.IsDeleted = false
 	userToken := c.Get("user").(*jwt.Token)
 	claims := userToken.Claims.(jwt.MapClaims)
 	userID := claims["id"].(string)

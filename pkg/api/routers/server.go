@@ -30,9 +30,9 @@ func users(e *echo.Echo, h *handlers.Handler) {
 	e.GET("/api/v1/users/password", h.ForgetPassword)
 	e.POST("/api/v1/users/password", h.ResetPassword)
 	e.GET("/api/v1/users/:id", h.GetUser)
-	e.GET("/api/v1/users", h.GetAllUsers)
+	e.GET("/api/v1/users", h.GetAllUsers, middlewares.IsAdmin)
 	e.PUT("/api/v1/users", h.UpdateUser)
-	e.DELETE("/api/v1/users/:id", h.DeleteUser)
+	e.DELETE("/api/v1/users/:id", h.DeleteUser, middlewares.IsAdmin)
 	e.GET("/api/v1/users/:id/classes", h.ListClasses)
 }
 

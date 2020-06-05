@@ -83,6 +83,13 @@ func (h *UserHandler) Signup(c echo.Context) (err error) {
 		}
 	}
 
+	if !(u.Role == "STUDENT" || u.Role == "TEACHER") {
+		return &echo.HTTPError{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid arguments: role",
+		}
+	}
+
 	// Hash password
 	u.Password, err = internal.HashPassword(u.Password)
 	if err != nil {
@@ -92,6 +99,7 @@ func (h *UserHandler) Signup(c echo.Context) (err error) {
 
 	u.ID = uuid.NewV4().String()
 	u.IsVerified = false
+	u.IsDeleted = false
 	u.CreatedAt = time.Now().UTC()
 	u.UpdatedAt = time.Now().UTC()
 

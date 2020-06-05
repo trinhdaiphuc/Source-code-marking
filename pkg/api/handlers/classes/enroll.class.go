@@ -9,7 +9,6 @@ import (
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func (h *ClassHandler) EnrollClass(c echo.Context) (err error) {
@@ -60,6 +59,11 @@ func (h *ClassHandler) EnrollClass(c echo.Context) (err error) {
 				Internal: err,
 			}
 		}
+		return &echo.HTTPError{
+			Code:     http.StatusInternalServerError,
+			Message:  "[Enroll class] Internal server error",
+			Internal: err,
+		}
 	}
 	if data.ID != "" {
 		return &echo.HTTPError{
@@ -70,19 +74,12 @@ func (h *ClassHandler) EnrollClass(c echo.Context) (err error) {
 	}
 
 	filter = bson.M{"_id": classID}
-	result = classCollection.FindOneAndUpdate(ctx, filter, update, options.FindOneAndUpdate().SetReturnDocument(1))
-	err = result.Decode(&data)
+	_, err = classCollection.UpdateOne(ctx, filter, update)
+
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return &echo.HTTPError{
-				Code:     http.StatusNotFound,
-				Message:  "Not found class",
-				Internal: err,
-			}
-		}
 		return &echo.HTTPError{
 			Code:     http.StatusInternalServerError,
-			Message:  "[Update user] Internal server error",
+			Message:  "[Enroll class] Internal server error",
 			Internal: err,
 		}
 	}

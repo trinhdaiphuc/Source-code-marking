@@ -14,6 +14,7 @@ type (
 		Description string    `json:"description" bson:"description"`
 		Deadline    time.Time `json:"deadline" bson:"deadline" validate:"required"`
 		IsOpen      bool      `json:"is_open" bson:"is_open"`
+		IsDeleted   bool      `json:"is_deleted" bson:"is_deleted"`
 		CreatedAt   time.Time `json:"created_at,omitempty" bson:"created_at,omitempty"`
 		UpdatedAt   time.Time `json:"updated_at,omitempty" bson:"updated_at,omitempty"`
 	}
@@ -26,7 +27,7 @@ type (
 )
 
 func GetExerciseCollection(db *mongo.Client) *mongo.Collection {
-	ExerciseCollection := getDatabase(db).Collection("exercisees")
+	ExerciseCollection := getDatabase(db).Collection("exercises")
 	return ExerciseCollection
 }
 

@@ -3,6 +3,7 @@ package classes
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
@@ -18,7 +19,15 @@ func (h *ClassHandler) DeleteClass(c echo.Context) (err error) {
 	h.Logger.Debug("UserID ", userID, ", ClassID ", classID)
 	ctx := context.Background()
 	classCollection := models.GetClassCollection(h.DB)
-	_, err = classCollection.DeleteOne(ctx, bson.M{"_id": classID, "teacher_id": userID})
+	update := bson.M{
+		"$set": bson.M{
+			"is_deleted": true,
+			"updated_at": time.Now().UTC(),
+		},
+	}
+
+	filter := bson.M{"_id": classID, "teachers._id": userID}
+	_, err = classCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return &echo.HTTPError{
 			Code:     http.StatusInternalServerError,

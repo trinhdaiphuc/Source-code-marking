@@ -10,7 +10,6 @@ import (
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func (h *UserHandler) UpdateUser(c echo.Context) (err error) {
@@ -46,6 +45,12 @@ func (h *UserHandler) UpdateUser(c echo.Context) (err error) {
 			Internal: err,
 		}
 	}
+	if data.IsDeleted {
+		return &echo.HTTPError{
+			Code:    http.StatusGone,
+			Message: "Email has been deleted.",
+		}
+	}
 
 	update := bson.M{
 		"$set": bson.M{
@@ -55,8 +60,7 @@ func (h *UserHandler) UpdateUser(c echo.Context) (err error) {
 	}
 	filter := bson.M{"_id": userID}
 
-	resultUpdate := userCollection.FindOneAndUpdate(ctx, filter, update, options.FindOneAndUpdate().SetReturnDocument(1))
-	err = resultUpdate.Decode(&data)
+	_, err = userCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return &echo.HTTPError{
 			Code:     http.StatusInternalServerError,

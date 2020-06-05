@@ -12,6 +12,7 @@ type (
 		UserID    string    `json:"user_id" bson:"user_id"`
 		IsRead    string    `json:"is_read" bson:"is_read"`
 		Content   string    `json:"content" bson:"content"`
+		IsDeleted bool      `json:"is_deleted" bson:"is_deleted"`
 		CreatedAt time.Time `json:"created_at,omitempty" bson:"created_at"`
 		UpdatedAt time.Time `json:"updated_at,omitempty" bson:"updated_at"`
 	}
