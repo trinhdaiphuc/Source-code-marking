@@ -32,10 +32,8 @@ type Claims struct {
 
 // Define our message object
 type WebsocketMessage struct {
-	Email    string `json:"email"`
-	ID       string `json:"id"`
-	Username string `json:"username"`
-	Message  string `json:"message"`
+	Jwt     string `json:"jwt"`
+	Message string `json:"message"`
 }
 
 func (h *NotificationHandler) WebsocketNotification(c echo.Context) (err error) {
