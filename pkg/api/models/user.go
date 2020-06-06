@@ -53,7 +53,7 @@ func newUserCollection(db *mongo.Client) {
 	ctx := context.Background()
 	userCollection := getDatabase(db).Collection("users")
 	userCollection.Indexes().CreateOne(ctx, mod)
-	password, _ := internal.HashPassword("phucdeptrai")
+	password, _ := internal.HashPassword("123456")
 	admin := &User{
 		ID:         uuid.NewV4().String(),
 		Email:      "admin@gmail.com",

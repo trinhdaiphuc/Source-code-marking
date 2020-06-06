@@ -32,9 +32,9 @@ type Claims struct {
 
 // Define our message object
 type WebsocketMessage struct {
-	Jwt            string `json:"jwt"`
-	NotificationID string `json:"notification_id"`
-	Notifications  string `json:"notifications"`
+	Jwt            string `json:"jwt,omitempty"`
+	NotificationID string `json:"notification_id,omitempty"`
+	Notifications  string `json:"notifications,omitempty"`
 }
 
 func (h *NotificationHandler) WebsocketNotification(c echo.Context) (err error) {
@@ -100,6 +100,7 @@ func (h *NotificationHandler) WebsocketNotification(c echo.Context) (err error) 
 	}
 
 	ch := pubsub.Channel()
+	defer pubsub.Close()
 	for {
 		// Read
 		readMsg := &WebsocketMessage{}

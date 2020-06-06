@@ -18,6 +18,7 @@ func (h *ClassHandler) CreateClass(c echo.Context) (err error) {
 	userToken := c.Get("user").(*jwt.Token)
 	claims := userToken.Claims.(jwt.MapClaims)
 	userID := claims["id"].(string)
+	ctx := context.Background()
 
 	if err := c.Bind(classItem); err != nil {
 		return &echo.HTTPError{
@@ -39,7 +40,7 @@ func (h *ClassHandler) CreateClass(c echo.Context) (err error) {
 	userCollection := models.GetUserCollection(h.DB)
 	filter := bson.M{"_id": userID, "is_deleted": false}
 
-	result := userCollection.FindOne(context.Background(), filter)
+	result := userCollection.FindOne(ctx, filter)
 	if err := result.Decode(&user); err != nil {
 		if err == mongo.ErrNoDocuments {
 			return &echo.HTTPError{
@@ -63,7 +64,6 @@ func (h *ClassHandler) CreateClass(c echo.Context) (err error) {
 
 	classCollection := models.GetClassCollection(h.DB)
 
-	ctx := context.Background()
 	_, err = classCollection.InsertOne(ctx, classItem)
 
 	if err != nil {
