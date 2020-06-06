@@ -46,7 +46,7 @@ func classes(e *echo.Echo, h *handlers.Handler) {
 	e.POST("/api/v1/classes/:id/enroll", h.EnrollClass, middlewares.IsStudent)
 	e.PUT("/api/v1/classes/:id/enroll", h.UnnrollClass, middlewares.IsStudent)
 	e.GET("/api/v1/classes/:id/exercises", h.ListExercises)
-	e.GET("/api/v1/classes/:id/users", h.ListClassUsers)
+	e.GET("/api/v1/classes/:id/users", h.ListClassUsers, middlewares.IsTeacherOrStudent)
 }
 
 func exercises(e *echo.Echo, h *handlers.Handler) {
