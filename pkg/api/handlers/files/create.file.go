@@ -89,6 +89,7 @@ func (h *FileHandler) CreateFile(c echo.Context) (err error) {
 	}
 
 	fileItem.UserID = userID
+	fileItem.IsDeleted = false
 	fileItem.CreatedAt = time.Now().UTC()
 	fileItem.UpdatedAt = time.Now().UTC()
 

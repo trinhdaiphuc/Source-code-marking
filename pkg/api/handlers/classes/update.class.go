@@ -72,6 +72,12 @@ UPDATECLASS:
 	}
 	filter := bson.M{"_id": classID}
 
+	userRole := claims["role"].(string)
+
+	if userRole != "ADMIN" {
+		filter["is_deleted"] = false
+	}
+
 	resultUpdate := classCollection.FindOneAndUpdate(ctx, filter, update, options.FindOneAndUpdate().SetReturnDocument(1))
 	err = resultUpdate.Decode(&data)
 	if err != nil {

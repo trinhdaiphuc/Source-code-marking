@@ -13,6 +13,7 @@ type (
 		Description string    `json:"description" bson:"description"`
 		Teachers    []User    `json:"teachers" bson:"teachers"`
 		Students    []User    `json:"students,omitempty" bson:"students,omitempty"`
+		IsDeleted   bool      `json:"is_deleted" bson:"is_deleted"`
 		CreatedAt   time.Time `json:"created_at,omitempty" bson:"created_at,omitempty"`
 		UpdatedAt   time.Time `json:"updated_at,omitempty" bson:"updated_at,omitempty"`
 	}

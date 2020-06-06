@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/go-redis/redis/v8"
 	"github.com/trinhdaiphuc/Source-code-marking/internal"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -20,16 +21,18 @@ type Claims struct {
 }
 
 type UserHandler struct {
-	Logger *internal.AppLog
-	DB     *mongo.Client
-	JWTKey string
+	Logger      *internal.AppLog
+	DB          *mongo.Client
+	JWTKey      string
+	RedisClient *redis.Client
 }
 
-func NewUserHandler(logger *internal.AppLog, jwtKey string, db *mongo.Client) (u *UserHandler) {
+func NewUserHandler(logger *internal.AppLog, jwtKey string, db *mongo.Client, redisClient *redis.Client) (u *UserHandler) {
 	u = &UserHandler{
-		Logger: logger,
-		JWTKey: jwtKey,
-		DB:     db,
+		Logger:      logger,
+		JWTKey:      jwtKey,
+		DB:          db,
+		RedisClient: redisClient,
 	}
 	return
 }

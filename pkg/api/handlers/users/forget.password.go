@@ -48,6 +48,13 @@ func (h *UserHandler) ForgetPassword(c echo.Context) (err error) {
 		}
 	}
 
+	if user.IsDeleted {
+		return &echo.HTTPError{
+			Code:    http.StatusGone,
+			Message: "User has been deleted.",
+		}
+	}
+
 	go sendResetPasswordEmail(*user, h.JWTKey, h.Logger)
 	return c.NoContent(http.StatusNoContent)
 }

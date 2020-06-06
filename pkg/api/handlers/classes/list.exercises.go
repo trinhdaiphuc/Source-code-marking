@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
 	"github.com/trinhdaiphuc/Source-code-marking/internal"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
@@ -56,6 +57,15 @@ func (h *ClassHandler) ListExercises(c echo.Context) (err error) {
 	opts = append(opts, options.Find().SetLimit(limit))
 
 	filter := bson.M{"class_id": classID}
+
+	userToken := c.Get("user").(*jwt.Token)
+	claims := userToken.Claims.(jwt.MapClaims)
+	userRole := claims["role"].(string)
+
+	if userRole != "ADMIN" {
+		filter["is_deleted"] = false
+	}
+
 	exerciseCollection := models.GetExerciseCollection(h.DB)
 	ctx := context.Background()
 	cursor, err := exerciseCollection.Find(ctx, filter, opts...)

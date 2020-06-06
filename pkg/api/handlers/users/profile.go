@@ -37,6 +37,12 @@ func (h *UserHandler) Profile(c echo.Context) (err error) {
 		}
 	}
 	user.Password = ""
+	if user.IsDeleted {
+		return &echo.HTTPError{
+			Code:    http.StatusGone,
+			Message: "User has been deleted.",
+		}
+	}
 
 	return c.JSON(http.StatusOK, user)
 }

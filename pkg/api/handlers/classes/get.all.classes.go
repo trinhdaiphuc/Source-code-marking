@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
 	"github.com/trinhdaiphuc/Source-code-marking/internal"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
@@ -16,6 +17,9 @@ import (
 
 func (h *ClassHandler) GetAllClasses(c echo.Context) (err error) {
 	listParam := &models.ListQueryParam{}
+	userToken := c.Get("user").(*jwt.Token)
+	claims := userToken.Claims.(jwt.MapClaims)
+	userRole := claims["role"].(string)
 
 	if err := c.Bind(listParam); err != nil {
 		return &echo.HTTPError{
@@ -53,6 +57,11 @@ func (h *ClassHandler) GetAllClasses(c echo.Context) (err error) {
 	opts = append(opts, options.Find().SetLimit(limit))
 
 	filter := bson.M{}
+
+	if userRole != "ADMIN" {
+		filter = bson.M{"is_deleted": false}
+	}
+
 	classCollection := models.GetClassCollection(h.DB)
 	ctx := context.Background()
 	cursor, err := classCollection.Find(ctx, filter, opts...)

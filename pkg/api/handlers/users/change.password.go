@@ -10,11 +10,10 @@ import (
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func (h *UserHandler) ResetPassword(c echo.Context) (err error) {
-	password := &models.ResetPassword{}
+func (h *UserHandler) ChangePassword(c echo.Context) (err error) {
+	password := &models.ChangePassword{}
 	if err := c.Bind(password); err != nil {
 		return &echo.HTTPError{
 			Code:     http.StatusBadRequest,
@@ -36,37 +35,23 @@ func (h *UserHandler) ResetPassword(c echo.Context) (err error) {
 	claims := userToken.Claims.(jwt.MapClaims)
 	userID := claims["id"].(string)
 
-	h.Logger.Debug("Password: ", password.Password)
 	filter := bson.M{"_id": userID}
-	ctx := context.Background()
-	hashPassword, err := internal.HashPassword(password.Password)
-	if err != nil {
-		return &echo.HTTPError{
-			Code:     http.StatusInternalServerError,
-			Message:  "[ResetPassword] Internal server error",
-			Internal: err,
-		}
-	}
-	update := bson.M{
-		"$set": bson.M{
-			"password": hashPassword,
-		},
-	}
-
 	userCollection := models.GetUserCollection(h.DB)
-	result := userCollection.FindOneAndUpdate(ctx, filter, update, options.FindOneAndUpdate().SetReturnDocument(1))
+	resultFind := userCollection.FindOne(context.Background(), bson.M{"_id": userID})
 
-	if err = result.Decode(&user); err != nil {
+	ctx := context.Background()
+	if err := resultFind.Decode(&user); err != nil {
+		h.Logger.Debug("Error when sign in by email ", err)
 		if err == mongo.ErrNoDocuments {
 			return &echo.HTTPError{
 				Code:     http.StatusNotFound,
-				Message:  "Not found User",
+				Message:  "Not found user ",
 				Internal: err,
 			}
 		}
 		return &echo.HTTPError{
 			Code:     http.StatusInternalServerError,
-			Message:  "[ResetPassword] Internal server error",
+			Message:  "[Get user] Internal server error",
 			Internal: err,
 		}
 	}
@@ -75,6 +60,39 @@ func (h *UserHandler) ResetPassword(c echo.Context) (err error) {
 		return &echo.HTTPError{
 			Code:    http.StatusGone,
 			Message: "User has been deleted.",
+		}
+	}
+
+	if ok := internal.CheckPasswordHash(password.OldPassword, user.Password); !ok {
+		return &echo.HTTPError{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid old password",
+		}
+	}
+
+	newPassword, err := internal.HashPassword(password.NewPassword)
+
+	if err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusInternalServerError,
+			Message:  "[ChangePassword] Internal server error",
+			Internal: err,
+		}
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"password": newPassword,
+		},
+	}
+
+	_, err = userCollection.UpdateOne(ctx, filter, update)
+
+	if err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusInternalServerError,
+			Message:  "[ChangePassword] Internal server error",
+			Internal: err,
 		}
 	}
 

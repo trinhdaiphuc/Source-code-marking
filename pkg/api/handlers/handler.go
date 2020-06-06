@@ -45,6 +45,7 @@ type (
 		ValidateUser(c echo.Context) (err error)
 		ForgetPassword(c echo.Context) (err error)
 		ResetPassword(c echo.Context) (err error)
+		ChangePassword(c echo.Context) (err error)
 	}
 
 	// ClassInterface is a interface for handle all class logic
@@ -107,7 +108,7 @@ func NewHandlers(db *mongo.Client, logger *internal.AppLog, redisClient *redis.C
 
 	h.WebsocketClients = make(map[*websocket.Conn]string)
 
-	h.UserHandler = users.NewUserHandler(logger, h.JWTKey, db)
+	h.UserHandler = users.NewUserHandler(logger, h.JWTKey, db, h.RedisClient)
 	h.FileHandler = files.NewFileHandler(logger, db, h.RedisClient)
 	h.CommentHandler = comments.NewCommentHandler(logger, db)
 	h.ClassHandler = classes.NewClassHandler(logger, db)
