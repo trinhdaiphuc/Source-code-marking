@@ -25,4 +25,5 @@ require (
 	go.mongodb.org/mongo-driver v1.3.4
 	golang.org/x/crypto v0.0.0-20200604202706-70a84ac30bf9
 	google.golang.org/grpc v1.29.1
+	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
 )
