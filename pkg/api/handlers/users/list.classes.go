@@ -90,7 +90,7 @@ func (h *UserHandler) ListClasses(c echo.Context) (err error) {
 		filterBy = "teachers._id"
 	}
 
-	filter := bson.M{filterBy: userID}
+	filter := bson.M{filterBy: userID, "is_deleted": false}
 	classCollection := models.GetClassCollection(h.DB)
 	cursor, err := classCollection.Find(ctx, filter, opts...)
 
