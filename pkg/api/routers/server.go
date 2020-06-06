@@ -80,4 +80,5 @@ func comments(e *echo.Echo, h *handlers.Handler) {
 func webSocketNotification(e *echo.Echo, h *handlers.Handler) {
 	e.GET("/api/v1/ws", h.WebsocketNotification)
 	e.GET("/api/v1/notifications", h.GetAllNotifications)
+	e.PATCH("/api/v1/notifications/:id", h.MarkReadNotification)
 }

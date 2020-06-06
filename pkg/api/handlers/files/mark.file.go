@@ -66,10 +66,11 @@ func publishMarkingNotification(
 	notificationArray := []models.Notification{}
 	cursor.All(ctx, &notificationArray)
 
-	logger.Debug("Notifications ", notificationArray)
-
 	message, _ := json.Marshal(notificationArray)
-	err = redisClient.Publish(ctx, "user:"+user.Email, message).Err()
+	err = redisClient.Publish(ctx, user.Email, message).Err()
+
+	logger.Debug("User Email ", user.Email)
+
 	if err != nil {
 		logger.Error("Error when publish ", err)
 	}

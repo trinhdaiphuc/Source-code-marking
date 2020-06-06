@@ -49,6 +49,11 @@ func (h *ClassHandler) UpdateClass(c echo.Context) (err error) {
 			Internal: err,
 		}
 	}
+	userRole := claims["role"].(string)
+
+	if userRole == "ADMIN" {
+		goto UPDATECLASS
+	}
 
 	for _, v := range data.Teachers {
 		if v.ID == userID {
@@ -71,8 +76,6 @@ UPDATECLASS:
 		},
 	}
 	filter := bson.M{"_id": classID}
-
-	userRole := claims["role"].(string)
 
 	if userRole != "ADMIN" {
 		filter["is_deleted"] = false

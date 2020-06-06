@@ -2,12 +2,16 @@ package notifications
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"os"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
+	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // Configure the upgrader
@@ -32,9 +36,9 @@ type Claims struct {
 
 // Define our message object
 type WebsocketMessage struct {
-	Jwt            string `json:"jwt"`
-	NotificationID string `json:"notification_id"`
-	Notifications  string `json:"notifications"`
+	Jwt            string `json:"jwt,omitempty"`
+	NotificationID string `json:"notification_id,omitempty"`
+	Notifications  string `json:"notifications,omitempty"`
 }
 
 func (h *NotificationHandler) WebsocketNotification(c echo.Context) (err error) {
@@ -92,7 +96,39 @@ func (h *NotificationHandler) WebsocketNotification(c echo.Context) (err error) 
 	ctx := context.Background()
 	h.Logger.Info("Connect to websocket user: ", claims.Email)
 
+	notificationCollection := models.GetNotificationCollection(h.DB)
+
+	opts := []*options.FindOptions{}
+	opts = append(opts, options.Find().SetSort(bson.D{{"created_at", 1}}))
+	opts = append(opts, options.Find().SetSkip(0))
+	opts = append(opts, options.Find().SetLimit(5))
+	opts = append(opts, options.Find().SetProjection(bson.D{{"content", 1}, {"exercise_id", 1}, {"is_read", 1}}))
+
+	filter := bson.M{"user_id": claims.ID, "is_deleted": false}
+
+	cursor, err := notificationCollection.Find(ctx, filter, opts...)
+	if err != nil {
+		h.Logger.Error("Error when find ", err)
+		return
+	}
+
+	notificationArray := []models.Notification{}
+	cursor.All(ctx, &notificationArray)
+	data, _ := json.Marshal(notificationArray)
+
+	firstMsg := &WebsocketMessage{
+		Notifications: string(data),
+	}
+
+	err = ws.WriteJSON(firstMsg)
+	if err != nil {
+		h.Logger.Error(err)
+		delete(h.WebsocketClients, ws)
+		return
+	}
+
 	pubsub := h.RedisClient.Subscribe(ctx, claims.Email)
+
 	// Wait for confirmation that subscription is created before publishing anything.
 	_, err = pubsub.Receive(ctx)
 	if err != nil {
@@ -100,19 +136,13 @@ func (h *NotificationHandler) WebsocketNotification(c echo.Context) (err error) 
 	}
 
 	ch := pubsub.Channel()
-	for {
-		// Read
-		readMsg := &WebsocketMessage{}
-		err = ws.ReadJSON(&readMsg)
-		if err != nil {
-			delete(h.WebsocketClients, ws)
-			return err
-		}
+	defer pubsub.Close()
 
+	for {
 		writeMsg := &WebsocketMessage{}
 		// Consume messages.
 		for msgRedis := range ch {
-			h.Logger.Debug(msgRedis.Channel, " ", msgRedis.Payload)
+			h.Logger.Debug("Message in channel ", msgRedis.Channel, " ", msgRedis.Payload)
 			// Write
 			writeMsg.Notifications = msgRedis.Payload
 			err = ws.WriteJSON(writeMsg)

@@ -14,3 +14,7 @@ func (h *Handler) WebsocketNotification(c echo.Context) (err error) {
 func (h *Handler) GetAllNotifications(c echo.Context) (err error) {
 	return h.Notification.GetAllNotifications(c)
 }
+
+func (h *Handler) MarkReadNotification(c echo.Context) (err error) {
+	return h.Notification.MarkReadNotification(c)
+}
