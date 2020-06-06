@@ -70,6 +70,13 @@ func (h *UserHandler) ListClasses(c echo.Context) (err error) {
 		}
 	}
 
+	if user.IsDeleted {
+		return &echo.HTTPError{
+			Code:    http.StatusGone,
+			Message: "User has been deleted.",
+		}
+	}
+
 	opts := []*options.FindOptions{}
 	opts = append(opts, options.Find().SetSort(bson.D{{orderBy, orderType}}))
 	opts = append(opts, options.Find().SetSkip(skip))

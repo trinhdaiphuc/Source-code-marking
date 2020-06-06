@@ -10,6 +10,7 @@ import (
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func (h *ExerciseHandler) DeleteExercise(c echo.Context) (err error) {
@@ -65,8 +66,17 @@ func (h *ExerciseHandler) DeleteExercise(c echo.Context) (err error) {
 		},
 	}
 
-	_, err = exerciseCollection.UpdateOne(ctx, bson.M{"_id": exerciseID}, update)
-	if err != nil {
+	exercise := &models.Exercise{}
+
+	result = exerciseCollection.FindOneAndUpdate(ctx, bson.M{"_id": exerciseID}, update, options.FindOneAndUpdate().SetReturnDocument(1))
+	if err = result.Decode(&exercise); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return &echo.HTTPError{
+				Code:     http.StatusNotFound,
+				Message:  "Not found exercise",
+				Internal: err,
+			}
+		}
 		return &echo.HTTPError{
 			Code:     http.StatusInternalServerError,
 			Message:  "[DeleteExercise] Internal server error",

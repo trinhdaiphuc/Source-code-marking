@@ -55,7 +55,7 @@ func (h *FileHandler) MarkFile(c echo.Context) (err error) {
 	ctx := context.Background()
 	fileCollection := models.GetFileCollection(h.DB)
 
-	resultFind := fileCollection.FindOne(context.Background(), bson.M{"_id": fileID})
+	resultFind := fileCollection.FindOne(context.Background(), bson.M{"_id": fileID, "is_deleted": false})
 
 	data := &models.File{}
 	if err := resultFind.Decode(&data); err != nil {
@@ -75,7 +75,7 @@ func (h *FileHandler) MarkFile(c echo.Context) (err error) {
 	}
 
 	exerciseCollection := models.GetExerciseCollection(h.DB)
-	resultFind = exerciseCollection.FindOne(context.Background(), bson.M{"_id": data.ExerciseID})
+	resultFind = exerciseCollection.FindOne(context.Background(), bson.M{"_id": data.ExerciseID, "is_deleted": false})
 
 	exercise := &models.Exercise{}
 	if err := resultFind.Decode(&exercise); err != nil {

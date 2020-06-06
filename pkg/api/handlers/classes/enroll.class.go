@@ -9,6 +9,7 @@ import (
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func (h *ClassHandler) EnrollClass(c echo.Context) (err error) {
@@ -18,8 +19,10 @@ func (h *ClassHandler) EnrollClass(c echo.Context) (err error) {
 	classID := c.Param("id")
 
 	user := models.User{}
+	ctx := context.Background()
+
 	userCollection := models.GetUserCollection(h.DB)
-	result := userCollection.FindOne(context.Background(), bson.M{"_id": userID})
+	result := userCollection.FindOne(ctx, bson.M{"_id": userID})
 	if err := result.Decode(&user); err != nil {
 		if err == mongo.ErrNoDocuments {
 			return &echo.HTTPError{
@@ -36,8 +39,17 @@ func (h *ClassHandler) EnrollClass(c echo.Context) (err error) {
 	}
 	user.Password = ""
 
+	if user.IsDeleted {
+		return &echo.HTTPError{
+			Code:    http.StatusGone,
+			Message: "User has been deleted.",
+		}
+	}
+
 	classCollection := models.GetClassCollection(h.DB)
 
+	filter := bson.M{"_id": classID, "is_deleted": false}
+	data := &models.Class{}
 	update := bson.M{
 		"$addToSet": bson.M{
 			"students": bson.M{
@@ -45,13 +57,10 @@ func (h *ClassHandler) EnrollClass(c echo.Context) (err error) {
 			},
 		},
 	}
-	filter := bson.M{"_id": classID, "students._id": user.ID}
-	data := &models.Class{}
-	ctx := context.Background()
 
-	result = classCollection.FindOne(ctx, filter)
-	err = result.Decode(&data)
-	if err != nil {
+	result = classCollection.FindOneAndUpdate(ctx, filter, update, options.FindOneAndUpdate().SetReturnDocument(1))
+
+	if err = result.Decode(&data); err != nil {
 		if err != mongo.ErrNoDocuments {
 			return &echo.HTTPError{
 				Code:     http.StatusNotFound,
@@ -65,23 +74,6 @@ func (h *ClassHandler) EnrollClass(c echo.Context) (err error) {
 			Internal: err,
 		}
 	}
-	if data.ID != "" {
-		return &echo.HTTPError{
-			Code:     http.StatusConflict,
-			Message:  "Already enroll",
-			Internal: err,
-		}
-	}
 
-	filter = bson.M{"_id": classID}
-	_, err = classCollection.UpdateOne(ctx, filter, update)
-
-	if err != nil {
-		return &echo.HTTPError{
-			Code:     http.StatusInternalServerError,
-			Message:  "[Enroll class] Internal server error",
-			Internal: err,
-		}
-	}
 	return c.JSON(http.StatusOK, data)
 }

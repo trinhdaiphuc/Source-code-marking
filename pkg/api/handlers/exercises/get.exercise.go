@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 	"go.mongodb.org/mongo-driver/bson"
@@ -16,7 +17,15 @@ func (h *ExerciseHandler) GetExercise(c echo.Context) (err error) {
 	ExerciseID := c.Param("id")
 
 	exerciseCollection := models.GetExerciseCollection(h.DB)
-	resultFind := exerciseCollection.FindOne(context.Background(), bson.M{"_id": ExerciseID})
+	filter := bson.M{"_id": ExerciseID}
+
+	userToken := c.Get("user").(*jwt.Token)
+	claims := userToken.Claims.(jwt.MapClaims)
+	userRole := claims["role"].(string)
+	if userRole != "ADMIN" {
+		filter["is_deleted"] = false
+	}
+	resultFind := exerciseCollection.FindOne(context.Background(), filter)
 
 	Exercise := &models.Exercise{}
 	if err := resultFind.Decode(&Exercise); err != nil {

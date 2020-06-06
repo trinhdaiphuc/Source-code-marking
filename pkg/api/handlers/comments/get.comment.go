@@ -16,7 +16,7 @@ func (h *CommentHandler) GetComment(c echo.Context) (err error) {
 	commentID := c.Param("id")
 
 	fileCollection := models.GetFileCollection(h.DB)
-	resultFind := fileCollection.FindOne(context.Background(), bson.M{"_id": commentID})
+	resultFind := fileCollection.FindOne(context.Background(), bson.M{"comments._id": commentID})
 
 	comment := models.Comment{}
 	if err := resultFind.Decode(&comment); err != nil {

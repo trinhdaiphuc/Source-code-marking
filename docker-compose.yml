@@ -37,6 +37,8 @@ services:
       - "4000:4000"
   redis:
     image: "redis:alpine"
+    ports: 
+      - "6378:6379"
 
 volumes:
   mongo:

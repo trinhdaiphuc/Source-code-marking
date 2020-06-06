@@ -25,6 +25,11 @@ type (
 		UpdatedAt  time.Time `json:"updated_at,omitempty" bson:"updated_at"`
 	}
 
+	ChangePassword struct {
+		OldPassword string `json:"old_password" validate:"required,min=6"`
+		NewPassword string `json:"new_password" validate:"required,min=6"`
+	}
+
 	ListUser struct {
 		Users         []User `json:"users"`
 		NextPageToken int64  `json:"next_page_token"`

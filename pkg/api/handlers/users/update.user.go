@@ -45,10 +45,11 @@ func (h *UserHandler) UpdateUser(c echo.Context) (err error) {
 			Internal: err,
 		}
 	}
+
 	if data.IsDeleted {
 		return &echo.HTTPError{
 			Code:    http.StatusGone,
-			Message: "Email has been deleted.",
+			Message: "User has been deleted.",
 		}
 	}
 

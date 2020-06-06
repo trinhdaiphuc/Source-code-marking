@@ -43,7 +43,7 @@ func (h *CommentHandler) CreateComment(c echo.Context) (err error) {
 
 	fileItem := &models.File{}
 	ctx := context.Background()
-	filter := bson.M{"_id": commentItem.FileID}
+	filter := bson.M{"_id": commentItem.FileID, "is_deleted": false}
 	result := fileCollection.FindOne(ctx, filter)
 
 	if err := result.Decode(&fileItem); err != nil {

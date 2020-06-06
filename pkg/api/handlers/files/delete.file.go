@@ -15,7 +15,6 @@ func (h *FileHandler) DeleteFile(c echo.Context) (err error) {
 	claims := userToken.Claims.(jwt.MapClaims)
 	userID := claims["id"].(string)
 	fileID := c.Param("id")
-	h.Logger.Debug("UserID ", userID, ", FileID ", fileID)
 	ctx := context.Background()
 	fileCollection := models.GetFileCollection(h.DB)
 	_, err = fileCollection.DeleteOne(ctx, bson.M{"_id": fileID, "user_id": userID})

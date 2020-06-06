@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 	"go.mongodb.org/mongo-driver/bson"
@@ -41,6 +42,14 @@ func (h *ClassHandler) ListClassUsers(c echo.Context) (err error) {
 	ctx := context.Background()
 	filter := bson.M{
 		"_id": classID,
+	}
+
+	userToken := c.Get("user").(*jwt.Token)
+	claims := userToken.Claims.(jwt.MapClaims)
+	userRole := claims["role"].(string)
+
+	if userRole != "ADMIN" {
+		filter["is_deleted"] = false
 	}
 
 	switch listParam.FilterValue {

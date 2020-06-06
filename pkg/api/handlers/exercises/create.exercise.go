@@ -40,7 +40,8 @@ func (h *ExerciseHandler) CreateExercise(c echo.Context) (err error) {
 
 	classItem := &models.Class{}
 	classCollection := models.GetClassCollection(h.DB)
-	result := classCollection.FindOne(context.Background(), bson.M{"_id": exerciseItem.ClassID, "teachers._id": userID})
+	filter := bson.M{"_id": exerciseItem.ClassID, "is_deleted": false, "teachers._id": userID}
+	result := classCollection.FindOne(context.Background(), filter)
 	if err := result.Decode(&classItem); err != nil {
 		h.Logger.Info("Error when sign in by email ", err)
 		if err == mongo.ErrNoDocuments {

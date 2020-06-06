@@ -72,7 +72,7 @@ func (h *UserHandler) ValidateUser(c echo.Context) (err error) {
 	if user.IsDeleted {
 		return &echo.HTTPError{
 			Code:    http.StatusGone,
-			Message: "Email has been deleted.",
+			Message: "User has been deleted.",
 		}
 	}
 

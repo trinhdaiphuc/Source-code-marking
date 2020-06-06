@@ -53,6 +53,11 @@ func (h *Handler) ValidateUser(c echo.Context) (err error) {
 func (h *Handler) ForgetPassword(c echo.Context) (err error) {
 	return h.UserHandler.ForgetPassword(c)
 }
+
 func (h *Handler) ResetPassword(c echo.Context) (err error) {
 	return h.UserHandler.ResetPassword(c)
+}
+
+func (h *Handler) ChangePassword(c echo.Context) (err error) {
+	return h.UserHandler.ChangePassword(c)
 }

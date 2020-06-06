@@ -29,6 +29,7 @@ func users(e *echo.Echo, h *handlers.Handler) {
 	e.GET("/api/v1/users/confirmation", h.ValidateUser)
 	e.GET("/api/v1/users/password", h.ForgetPassword)
 	e.POST("/api/v1/users/password", h.ResetPassword)
+	e.PUT("/api/v1/users/password", h.ChangePassword)
 	e.GET("/api/v1/users/:id", h.GetUser)
 	e.GET("/api/v1/users", h.GetAllUsers, middlewares.IsAdmin)
 	e.PUT("/api/v1/users", h.UpdateUser)
@@ -60,7 +61,7 @@ func exercises(e *echo.Echo, h *handlers.Handler) {
 func files(e *echo.Echo, h *handlers.Handler) {
 	e.POST("/api/v1/files", h.CreateFile, middlewares.IsStudent)
 	e.GET("/api/v1/files/:id", h.GetFile)
-	e.GET("/api/v1/files", h.GetAllFiles)
+	e.GET("/api/v1/files", h.GetAllFiles, middlewares.IsAdmin)
 	e.PUT("/api/v1/files/:id", h.UpdateFile, middlewares.IsStudent)
 	e.PATCH("/api/v1/files/:id", h.MarkFile, middlewares.IsTeacher)
 	e.DELETE("/api/v1/files/:id", h.DeleteFile, middlewares.IsStudent)
