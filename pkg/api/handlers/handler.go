@@ -96,6 +96,7 @@ type (
 	NotificationInterface interface {
 		WebsocketNotification(c echo.Context) (err error)
 		GetAllNotifications(c echo.Context) (err error)
+		MarkReadNotification(c echo.Context) (err error)
 	}
 )
 
