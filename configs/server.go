@@ -53,7 +53,7 @@ func newRedisClient() (client *redis.Client) {
 	defer cancel()
 	pong, err := client.Ping(ctx).Result()
 	if err != nil {
-		log.Error("Error when connecting to redis")
+		log.Error("Error when connecting to redis: ", err)
 	} else {
 		log.Info("Connected to redis ", pong)
 	}
