@@ -44,16 +44,17 @@ func LoggerConfig(e *EchoServer) {
 }
 
 func newRedisClient() (client *redis.Client) {
+	db, _ := strconv.Atoi(os.Getenv("REDIS_DB"))
 	client = redis.NewClient(&redis.Options{
 		Addr:     os.Getenv("REDIS_HOST"),
 		Password: "", // no password set
-		DB:       0,  // use default DB
+		DB:       db, // use default DB
 	})
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 	pong, err := client.Ping(ctx).Result()
 	if err != nil {
-		log.Error("Error when connecting to redis")
+		log.Error("Error when connecting to redis: ", err)
 	} else {
 		log.Info("Connected to redis ", pong)
 	}

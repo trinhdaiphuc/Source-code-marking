@@ -21,14 +21,24 @@ func (h *UserHandler) UpdateUser(c echo.Context) (err error) {
 		return
 	}
 
+	id := c.Param("id")
+
 	userToken := c.Get("user").(*jwt.Token)
 	claims := userToken.Claims.(jwt.MapClaims)
 	userID := claims["id"].(string)
+	userRole := claims["role"].(string)
+
+	if userRole != "ADMIN" && id != userID {
+		return &echo.HTTPError{
+			Code:    http.StatusForbidden,
+			Message: "Forbidden update user account",
+		}
+	}
 
 	userCollection := models.GetUserCollection(h.DB)
 	ctx := context.Background()
 	// Get the old data of user
-	result := userCollection.FindOne(ctx, bson.M{"_id": userID})
+	result := userCollection.FindOne(ctx, bson.M{"_id": id})
 	data := &models.User{}
 	if err = result.Decode(&data); err != nil {
 		h.Logger.Error("Error when get a user: ", err)
@@ -59,7 +69,7 @@ func (h *UserHandler) UpdateUser(c echo.Context) (err error) {
 			"updated_at": time.Now().UTC(),
 		},
 	}
-	filter := bson.M{"_id": userID}
+	filter := bson.M{"_id": id}
 
 	_, err = userCollection.UpdateOne(ctx, filter, update)
 	if err != nil {

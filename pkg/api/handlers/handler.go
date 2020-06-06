@@ -37,6 +37,7 @@ type (
 		Signin(c echo.Context) (err error)
 		Signup(c echo.Context) (err error)
 		Profile(c echo.Context) (err error)
+		CreateUser(c echo.Context) (err error)
 		GetUser(c echo.Context) (err error)
 		GetAllUsers(c echo.Context) (err error)
 		UpdateUser(c echo.Context) (err error)
@@ -94,6 +95,7 @@ type (
 	// NotificationInterface is a interface for handle all notification logic
 	NotificationInterface interface {
 		WebsocketNotification(c echo.Context) (err error)
+		GetAllNotifications(c echo.Context) (err error)
 	}
 )
 

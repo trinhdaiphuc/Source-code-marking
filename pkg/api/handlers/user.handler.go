@@ -31,7 +31,12 @@ func (h *Handler) GetAllUsers(c echo.Context) (err error) {
 	return h.UserHandler.GetAllUsers(c)
 }
 
-// UpdateUsers is a user information
+// CreateUser is used by admin
+func (h *Handler) CreateUser(c echo.Context) (err error) {
+	return h.UserHandler.CreateUser(c)
+}
+
+// UpdateUser is a user information
 func (h *Handler) UpdateUser(c echo.Context) (err error) {
 	return h.UserHandler.UpdateUser(c)
 }

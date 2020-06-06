@@ -9,10 +9,6 @@ import (
 
 func RedisSetCachedWithHash(key string, redisClient *redis.Client, values interface{}) (err error) {
 	ctx := context.Background()
-	_, err = redisClient.HGetAll(ctx, key).Result()
-	if err != nil {
-		return
-	}
 	convertMap := structs.Map(values)
 	err = redisClient.HMSet(ctx, key, convertMap).Err()
 	return
