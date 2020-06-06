@@ -21,8 +21,8 @@ func configureCORS(echoServer *configs.EchoServer) {
 		AllowMethods: []string{http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete, http.MethodPatch},
 		AllowHeaders: []string{"*"},
 		ExposeHeaders: []string{
-			"X-Requested-With", "X-Xss-Protection", "X-Frame-Options",
-			"Content-Length", "X-Content-Type-Options", "Origin",
+			"X-Requested-With", "X-Xss-Protection", "X-Frame-Options", "Connection",
+			"Content-Length", "X-Content-Type-Options", "Origin", "Upgrade",
 			"Content-Type", "Accept", "Authorization", "Access-Token", "Refresh-Token",
 		},
 	}))

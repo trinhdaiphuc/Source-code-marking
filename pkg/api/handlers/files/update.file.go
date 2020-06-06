@@ -31,7 +31,7 @@ func (h *FileHandler) UpdateFile(c echo.Context) (err error) {
 
 	ctx := context.Background()
 	fileCollection := models.GetFileCollection(h.DB)
-	resultFind := fileCollection.FindOne(ctx, bson.M{"_id": fileID})
+	resultFind := fileCollection.FindOne(ctx, bson.M{"_id": fileID, "is_deleted": false})
 
 	data := models.File{}
 	if err := resultFind.Decode(&data); err != nil {

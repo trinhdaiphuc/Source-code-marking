@@ -59,7 +59,7 @@ func main() {
 	models.NewModelDB(db)
 
 	// Initialize handler
-	h := handlers.NewHandlers(db, echoServer.Logger)
+	h := handlers.NewHandlers(db, echoServer.Logger, echoServer.RedisClient)
 
 	// configsure HTTP error handler
 	echoServer.EchoContext.HTTPErrorHandler = h.CustomHTTPErrorHandler

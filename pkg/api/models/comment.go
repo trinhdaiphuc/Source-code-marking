@@ -12,6 +12,7 @@ type (
 		Content   string    `json:"content" bson:"content" validate:"required"`
 		StartLine Position  `json:"start_line,omitempty" bson:"start_line,omitempty"`
 		EndLine   Position  `json:"end_line,omitempty" bson:"end_line,omitempty"`
+		IsDeleted bool      `json:"is_deleted" bson:"is_deleted"`
 		CreatedAt time.Time `json:"created_at,omitempty" bson:"created_at"`
 		UpdatedAt time.Time `json:"updated_at,omitempty" bson:"updated_at"`
 	}

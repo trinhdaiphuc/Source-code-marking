@@ -13,6 +13,7 @@ func Routing(e *echo.Echo, h *handlers.Handler) {
 	exercises(e, h)
 	files(e, h)
 	comments(e, h)
+	webSocketNotification(e, h)
 }
 
 func landingPage(e *echo.Echo, h *handlers.Handler) {
@@ -26,10 +27,13 @@ func users(e *echo.Echo, h *handlers.Handler) {
 	e.POST("/api/v1/users/signin", h.Signin)
 	e.GET("/api/v1/users/profile", h.Profile)
 	e.GET("/api/v1/users/confirmation", h.ValidateUser)
+	e.GET("/api/v1/users/password", h.ForgetPassword)
+	e.POST("/api/v1/users/password", h.ResetPassword)
+	e.PUT("/api/v1/users/password", h.ChangePassword)
 	e.GET("/api/v1/users/:id", h.GetUser)
-	e.GET("/api/v1/users", h.GetAllUsers)
+	e.GET("/api/v1/users", h.GetAllUsers, middlewares.IsAdmin)
 	e.PUT("/api/v1/users", h.UpdateUser)
-	e.DELETE("/api/v1/users/:id", h.DeleteUser)
+	e.DELETE("/api/v1/users/:id", h.DeleteUser, middlewares.IsAdmin)
 	e.GET("/api/v1/users/:id/classes", h.ListClasses)
 }
 
@@ -57,7 +61,7 @@ func exercises(e *echo.Echo, h *handlers.Handler) {
 func files(e *echo.Echo, h *handlers.Handler) {
 	e.POST("/api/v1/files", h.CreateFile, middlewares.IsStudent)
 	e.GET("/api/v1/files/:id", h.GetFile)
-	e.GET("/api/v1/files", h.GetAllFiles)
+	e.GET("/api/v1/files", h.GetAllFiles, middlewares.IsAdmin)
 	e.PUT("/api/v1/files/:id", h.UpdateFile, middlewares.IsStudent)
 	e.PATCH("/api/v1/files/:id", h.MarkFile, middlewares.IsTeacher)
 	e.DELETE("/api/v1/files/:id", h.DeleteFile, middlewares.IsStudent)
@@ -70,4 +74,8 @@ func comments(e *echo.Echo, h *handlers.Handler) {
 	e.GET("/api/v1/comments", h.GetAllComments)
 	e.PUT("/api/v1/comments/:id", h.UpdateComment, middlewares.IsTeacher)
 	e.DELETE("/api/v1/comments/:id", h.DeleteComment, middlewares.IsTeacher)
+}
+
+func webSocketNotification(e *echo.Echo, h *handlers.Handler) {
+	e.GET("/api/v1/ws", h.WebsocketNotification)
 }

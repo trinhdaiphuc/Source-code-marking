@@ -14,6 +14,7 @@ type File struct {
 	Data       string    `json:"data" bson:"data" validate:"required"`
 	Mark       float32   `json:"mark,omitempty" bson:"mark,omitempty" validate:"gte=0,lte=10"`
 	Comments   []Comment `json:"comments,omitempty" bson:"comments,omitempty"`
+	IsDeleted  bool      `json:"is_deleted" bson:"is_deleted"`
 	CreatedAt  time.Time `json:"created_at,omitempty" bson:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at,omitempty" bson:"updated_at"`
 }

@@ -26,7 +26,7 @@ func (h *ClassHandler) UnenrollClass(c echo.Context) (err error) {
 			},
 		},
 	}
-	filter := bson.M{"_id": classID}
+	filter := bson.M{"_id": classID, "is_deleted": false}
 	data := &models.Class{}
 
 	ctx := context.Background()

@@ -19,8 +19,10 @@ func (h *ClassHandler) EnrollClass(c echo.Context) (err error) {
 	classID := c.Param("id")
 
 	user := models.User{}
+	ctx := context.Background()
+
 	userCollection := models.GetUserCollection(h.DB)
-	result := userCollection.FindOne(context.Background(), bson.M{"_id": userID})
+	result := userCollection.FindOne(ctx, bson.M{"_id": userID})
 	if err := result.Decode(&user); err != nil {
 		if err == mongo.ErrNoDocuments {
 			return &echo.HTTPError{
@@ -37,8 +39,17 @@ func (h *ClassHandler) EnrollClass(c echo.Context) (err error) {
 	}
 	user.Password = ""
 
+	if user.IsDeleted {
+		return &echo.HTTPError{
+			Code:    http.StatusGone,
+			Message: "User has been deleted.",
+		}
+	}
+
 	classCollection := models.GetClassCollection(h.DB)
 
+	filter := bson.M{"_id": classID, "is_deleted": false}
+	data := &models.Class{}
 	update := bson.M{
 		"$addToSet": bson.M{
 			"students": bson.M{
@@ -46,14 +57,11 @@ func (h *ClassHandler) EnrollClass(c echo.Context) (err error) {
 			},
 		},
 	}
-	filter := bson.M{"_id": classID}
-	data := &models.Class{}
 
-	ctx := context.Background()
 	result = classCollection.FindOneAndUpdate(ctx, filter, update, options.FindOneAndUpdate().SetReturnDocument(1))
-	err = result.Decode(&data)
-	if err != nil {
-		if err == mongo.ErrNoDocuments {
+
+	if err = result.Decode(&data); err != nil {
+		if err != mongo.ErrNoDocuments {
 			return &echo.HTTPError{
 				Code:     http.StatusNotFound,
 				Message:  "Not found class",
@@ -62,9 +70,10 @@ func (h *ClassHandler) EnrollClass(c echo.Context) (err error) {
 		}
 		return &echo.HTTPError{
 			Code:     http.StatusInternalServerError,
-			Message:  "[Update user] Internal server error",
+			Message:  "[Enroll class] Internal server error",
 			Internal: err,
 		}
 	}
+
 	return c.JSON(http.StatusOK, data)
 }

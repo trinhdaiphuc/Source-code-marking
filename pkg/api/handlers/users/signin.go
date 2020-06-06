@@ -47,6 +47,13 @@ func (h *UserHandler) signinByEmail(u models.User, userCollection *mongo.Collect
 		}
 	}
 
+	if user.IsDeleted {
+		return nil, &echo.HTTPError{
+			Code:    http.StatusGone,
+			Message: "User has been deleted.",
+		}
+	}
+
 	if len(user.Password) == 0 {
 		return nil, &echo.HTTPError{
 			Code:    http.StatusUnauthorized,
@@ -72,6 +79,13 @@ func (h *UserHandler) signinByThirdparty(u *models.User, userCollection *mongo.C
 		}
 	}
 
+	if !(u.Role == "STUDENT" || u.Role == "TEACHER") {
+		return nil, &echo.HTTPError{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid arguments: role",
+		}
+	}
+
 	result := userCollection.FindOne(context.Background(), bson.M{"email": u.Email})
 
 	data := &models.User{}
@@ -83,6 +97,7 @@ func (h *UserHandler) signinByThirdparty(u *models.User, userCollection *mongo.C
 				Name:       u.Name,
 				IsVerified: true,
 				Role:       u.Role,
+				IsDeleted:  false,
 				CreatedAt:  time.Now().UTC(),
 				UpdatedAt:  time.Now().UTC(),
 			}
@@ -102,6 +117,20 @@ func (h *UserHandler) signinByThirdparty(u *models.User, userCollection *mongo.C
 			Code:     http.StatusBadRequest,
 			Message:  "[Signin] Internal server error",
 			Internal: err,
+		}
+	}
+
+	if data.Role != u.Role {
+		return nil, &echo.HTTPError{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid role",
+		}
+	}
+
+	if data.IsDeleted {
+		return nil, &echo.HTTPError{
+			Code:    http.StatusGone,
+			Message: "User has been deleted.",
 		}
 	}
 
@@ -155,7 +184,7 @@ func (h *UserHandler) Signin(c echo.Context) (err error) {
 	}
 
 	// Generate encoded token and send it as response
-	tokenString, err := createTokenWithUser(user.ID, user.Role, h.JWTKey, 24)
+	tokenString, err := createTokenWithUser(*user, h.JWTKey, 24)
 	if err != nil {
 		return err
 	}
@@ -163,6 +192,14 @@ func (h *UserHandler) Signin(c echo.Context) (err error) {
 	c.Response().Header().Set("Access-Token", tokenString)
 
 	user.Password = "" // Don't send password
+
+	go func() {
+		key := "user:" + user.ID
+		err = internal.RedisSetCachedWithHash(key, h.RedisClient, user)
+		if err != nil {
+			h.Logger.Error("Error when cached user ", err)
+		}
+	}()
 
 	return c.JSON(http.StatusOK, user)
 }

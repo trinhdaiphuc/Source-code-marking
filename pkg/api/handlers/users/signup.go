@@ -14,6 +14,20 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+func sendValidationMail(u models.User, jwtKey string, logger *internal.AppLog) {
+	token, _ := createTokenWithUser(u, jwtKey, 24)
+	validationLink := os.Getenv("FRONT_END_SERVER_HOST") + "/confirmation/" + token
+	logger.Info("Validation link ", validationLink)
+	content := "Please click this link to verify your email: " + validationLink
+	subject := "Welcome to Source code marking"
+	id, err := internal.SendMail(os.Getenv("EMAIL_USERNAME"), u.Email, subject, content)
+	if err != nil {
+		logger.Error("Error when send mail ", err)
+	} else {
+		logger.Info("Send mail success with id ", id)
+	}
+}
+
 // Signup handler
 func (h *UserHandler) Signup(c echo.Context) (err error) {
 	h.Logger.Info("Sign-up handler")
@@ -69,6 +83,13 @@ func (h *UserHandler) Signup(c echo.Context) (err error) {
 		}
 	}
 
+	if !(u.Role == "STUDENT" || u.Role == "TEACHER") {
+		return &echo.HTTPError{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid arguments: role",
+		}
+	}
+
 	// Hash password
 	u.Password, err = internal.HashPassword(u.Password)
 	if err != nil {
@@ -78,6 +99,7 @@ func (h *UserHandler) Signup(c echo.Context) (err error) {
 
 	u.ID = uuid.NewV4().String()
 	u.IsVerified = false
+	u.IsDeleted = false
 	u.CreatedAt = time.Now().UTC()
 	u.UpdatedAt = time.Now().UTC()
 
@@ -113,18 +135,6 @@ func (h *UserHandler) Signup(c echo.Context) (err error) {
 		}
 	}
 	u.Password = ""
-	go func() {
-		token, _ := createTokenWithUser(u.ID, u.Role, h.JWTKey, 24)
-		validationLink := os.Getenv("FRONT_END_SERVER_HOST") + "/confirmation?confirmation_token=" + token
-		h.Logger.Info("Validation link ", validationLink)
-		content := "Please click this link to verify your email: " + validationLink
-		subject := "Welcome to Source code marking"
-		id, err := internal.SendMail(os.Getenv("EMAIL_USERNAME"), u.Email, subject, content)
-		if err != nil {
-			h.Logger.Error("Error when send mail ", err)
-		} else {
-			h.Logger.Info("Send mail success with id ", id)
-		}
-	}()
+	go sendValidationMail(*u, h.JWTKey, h.Logger)
 	return c.JSON(http.StatusCreated, u)
 }

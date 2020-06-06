@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 	"go.mongodb.org/mongo-driver/bson"
@@ -27,7 +28,16 @@ func (h *ExerciseHandler) UpdateExercise(c echo.Context) (err error) {
 
 	ctx := context.Background()
 	exerciseCollection := models.GetExerciseCollection(h.DB)
-	resultFind := exerciseCollection.FindOne(ctx, bson.M{"_id": ExerciseID})
+
+	userToken := c.Get("user").(*jwt.Token)
+	claims := userToken.Claims.(jwt.MapClaims)
+	userRole := claims["role"].(string)
+	filter := bson.M{"_id": ExerciseID}
+	if userRole != "ADMIN" {
+		filter["is_deleted"] = false
+	}
+
+	resultFind := exerciseCollection.FindOne(ctx, filter)
 
 	data := models.Exercise{}
 	if err := resultFind.Decode(&data); err != nil {
@@ -54,7 +64,8 @@ func (h *ExerciseHandler) UpdateExercise(c echo.Context) (err error) {
 			"updated_at":  time.Now().UTC(),
 		},
 	}
-	filter := bson.M{"_id": ExerciseID}
+
+	filter = bson.M{"_id": ExerciseID}
 
 	resultUpdate := exerciseCollection.FindOneAndUpdate(ctx, filter, update, options.FindOneAndUpdate().SetReturnDocument(1))
 	err = resultUpdate.Decode(&data)
