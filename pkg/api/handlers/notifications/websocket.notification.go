@@ -32,8 +32,9 @@ type Claims struct {
 
 // Define our message object
 type WebsocketMessage struct {
-	Jwt     string `json:"jwt"`
-	Message string `json:"message"`
+	Jwt            string `json:"jwt"`
+	NotificationID string `json:"notification_id"`
+	Notifications  string `json:"notifications"`
 }
 
 func (h *NotificationHandler) WebsocketNotification(c echo.Context) (err error) {
@@ -44,13 +45,12 @@ func (h *NotificationHandler) WebsocketNotification(c echo.Context) (err error) 
 	defer ws.Close()
 
 	msg := &WebsocketMessage{}
-	_, message, err := ws.ReadMessage()
+	err = ws.ReadJSON(&msg)
 	if err != nil {
 		return err
 	}
-	jwtString := string(message[:])
-	h.Logger.Debug("JWT ", jwtString)
-	if jwtString == "" {
+
+	if msg.Jwt == "" {
 		return &echo.HTTPError{
 			Code:    http.StatusBadRequest,
 			Message: "Missing token",
@@ -59,7 +59,7 @@ func (h *NotificationHandler) WebsocketNotification(c echo.Context) (err error) 
 
 	// Initialize a new instance of `Claims`
 	claims := &Claims{}
-	tkn, err := jwt.ParseWithClaims(jwtString, claims,
+	tkn, err := jwt.ParseWithClaims(msg.Jwt, claims,
 		func(token *jwt.Token) (interface{}, error) {
 			return []byte(os.Getenv("SECRET_KEY")), nil
 		})
@@ -85,7 +85,10 @@ func (h *NotificationHandler) WebsocketNotification(c echo.Context) (err error) 
 		}
 	}
 
-	h.WebsocketClients[ws] = claims.Email
+	if h.WebsocketClients[ws] == "" {
+		h.WebsocketClients[ws] = claims.Email
+	}
+
 	ctx := context.Background()
 	h.Logger.Info("Connect to websocket user: ", claims.Email)
 
@@ -98,12 +101,21 @@ func (h *NotificationHandler) WebsocketNotification(c echo.Context) (err error) 
 
 	ch := pubsub.Channel()
 	for {
+		// Read
+		readMsg := &WebsocketMessage{}
+		err = ws.ReadJSON(&readMsg)
+		if err != nil {
+			delete(h.WebsocketClients, ws)
+			return err
+		}
+
+		writeMsg := &WebsocketMessage{}
 		// Consume messages.
 		for msgRedis := range ch {
 			h.Logger.Debug(msgRedis.Channel, " ", msgRedis.Payload)
-			// Read
-			msg.Message = msgRedis.Payload
-			err = ws.WriteJSON(msg)
+			// Write
+			writeMsg.Notifications = msgRedis.Payload
+			err = ws.WriteJSON(writeMsg)
 			if err != nil {
 				h.Logger.Error(err)
 				delete(h.WebsocketClients, ws)

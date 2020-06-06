@@ -95,6 +95,7 @@ type (
 	// NotificationInterface is a interface for handle all notification logic
 	NotificationInterface interface {
 		WebsocketNotification(c echo.Context) (err error)
+		GetAllNotifications(c echo.Context) (err error)
 	}
 )
 
