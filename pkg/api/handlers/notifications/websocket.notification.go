@@ -10,8 +10,8 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"gopkg.in/mgo.v2/bson"
 )
 
 // Configure the upgrader
@@ -128,6 +128,7 @@ func (h *NotificationHandler) WebsocketNotification(c echo.Context) (err error) 
 	}
 
 	pubsub := h.RedisClient.Subscribe(ctx, claims.Email)
+
 	// Wait for confirmation that subscription is created before publishing anything.
 	_, err = pubsub.Receive(ctx)
 	if err != nil {
@@ -136,19 +137,12 @@ func (h *NotificationHandler) WebsocketNotification(c echo.Context) (err error) 
 
 	ch := pubsub.Channel()
 	defer pubsub.Close()
-	for {
-		// Read
-		readMsg := &WebsocketMessage{}
-		err = ws.ReadJSON(&readMsg)
-		if err != nil {
-			delete(h.WebsocketClients, ws)
-			return err
-		}
 
+	for {
 		writeMsg := &WebsocketMessage{}
 		// Consume messages.
 		for msgRedis := range ch {
-			h.Logger.Debug(msgRedis.Channel, " ", msgRedis.Payload)
+			h.Logger.Debug("Message in channel ", msgRedis.Channel, " ", msgRedis.Payload)
 			// Write
 			writeMsg.Notifications = msgRedis.Payload
 			err = ws.WriteJSON(writeMsg)
