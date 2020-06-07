@@ -1,48 +1,57 @@
 package users
 
 import (
-	"context"
 	"net/http"
+	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
+	"github.com/mitchellh/mapstructure"
+	"github.com/trinhdaiphuc/Source-code-marking/internal"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // Profile handler
 func (h *UserHandler) Profile(c echo.Context) (err error) {
-	// Bind
+	h.Logger.Debug("Profile user handler")
 	user := &models.User{}
 	userToken := c.Get("user").(*jwt.Token)
 	claims := userToken.Claims.(jwt.MapClaims)
 	userID := claims["id"].(string)
-	h.Logger.Debug("User id ", userID)
-	userCollection := models.GetUserCollection(h.DB)
-	result := userCollection.FindOne(context.Background(), bson.M{"_id": userID})
-	if err := result.Decode(&user); err != nil {
-		h.Logger.Info("Error when sign in by email ", err)
-		if err == mongo.ErrNoDocuments {
-			return &echo.HTTPError{
-				Code:     http.StatusNotFound,
-				Message:  "Not found user ",
-				Internal: err,
-			}
-		}
-		return &echo.HTTPError{
-			Code:     http.StatusInternalServerError,
-			Message:  "[Profile] Internal server error ",
-			Internal: err,
-		}
-	}
-	user.Password = ""
-	if user.IsDeleted {
-		return &echo.HTTPError{
-			Code:    http.StatusGone,
-			Message: "User has been deleted.",
-		}
+
+	key := "user:" + userID
+	cached, err := internal.RedisGetCachedWithHash(key, h.RedisClient)
+
+	if err != nil {
+		h.Logger.Error("Error when get cache ", err)
+		goto FIND_DB
 	}
 
+	mapstructure.Decode(cached, &user)
+
+	if user.ID != "" {
+		user.CreatedAt, err = time.Parse(time.RFC3339, cached["CreatedAt"])
+		user.UpdatedAt, err = time.Parse(time.RFC3339, cached["UpdatedAt"])
+		h.Logger.Debug("User get from cached ", user)
+		return c.JSON(http.StatusOK, user)
+	}
+
+FIND_DB:
+	userRole := claims["role"].(string)
+	user, err = models.GetAUser(h.DB, bson.M{"_id": userID}, userRole)
+
+	if err != nil {
+		return err
+	}
+
+	user.Password = ""
+	go func() {
+		key := "user:" + user.ID
+		err = internal.RedisSetCachedWithHash(key, h.RedisClient, user)
+		if err != nil {
+			h.Logger.Error("Error when cached user ", err)
+		}
+	}()
 	return c.JSON(http.StatusOK, user)
 }

@@ -1,32 +1,31 @@
 package users
 
 import (
-	"context"
 	"net/http"
 	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
 	"github.com/mitchellh/mapstructure"
 	"github.com/trinhdaiphuc/Source-code-marking/internal"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // Signin handler
 func (h *UserHandler) GetUser(c echo.Context) (err error) {
 	h.Logger.Debug("Get user handler")
-	// Get param
 	userID := c.Param("id")
 
 	key := "user:" + userID
 	cached, err := internal.RedisGetCachedWithHash(key, h.RedisClient)
 
+	user := &models.User{}
 	if err != nil {
 		h.Logger.Error("Error when get cache ", err)
+		goto FIND_DB
 	}
-	h.Logger.Debug("Cached ", cached)
-	user := models.User{}
+
 	mapstructure.Decode(cached, &user)
 
 	if user.ID != "" {
@@ -36,32 +35,16 @@ func (h *UserHandler) GetUser(c echo.Context) (err error) {
 		return c.JSON(http.StatusOK, user)
 	}
 
-	userCollection := models.GetUserCollection(h.DB)
-	resultFind := userCollection.FindOne(context.Background(), bson.M{"_id": userID})
+FIND_DB:
+	userToken := c.Get("user").(*jwt.Token)
+	claims := userToken.Claims.(jwt.MapClaims)
+	userRole := claims["role"].(string)
 
-	if err := resultFind.Decode(&user); err != nil {
-		h.Logger.Debug("Error when sign in by email ", err)
-		if err == mongo.ErrNoDocuments {
-			return &echo.HTTPError{
-				Code:     http.StatusNotFound,
-				Message:  "Not found user ",
-				Internal: err,
-			}
-		}
-		return &echo.HTTPError{
-			Code:     http.StatusInternalServerError,
-			Message:  "[Get user] Internal server error",
-			Internal: err,
-		}
+	user, err = models.GetAUser(h.DB, bson.M{"_id": userID}, userRole)
+	if err != nil {
+		h.Logger.Error("Error when get a user ", err)
+		return err
 	}
-
-	if user.IsDeleted {
-		return &echo.HTTPError{
-			Code:    http.StatusGone,
-			Message: "User has been deleted.",
-		}
-	}
-
 	user.Password = ""
 	go func() {
 		key := "user:" + user.ID

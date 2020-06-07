@@ -20,6 +20,6 @@ func (h *Handler) CustomHTTPErrorHandler(err error, context echo.Context) {
 	response := make(map[string]interface{})
 	response["message"] = "Try to access path = " + context.Path()
 	response["success"] = false
-	response["error"] = err.Error()
+	response["error"] = err
 	context.JSON(code, response)
 }
