@@ -48,7 +48,8 @@ func ConvertClassArrayToListClass(Classs []Class, nextPageToken, totalRecords in
 	return listClass
 }
 
-func GetAClass(classCollection *mongo.Collection, filter bson.M) (*Class, error) {
+func GetAClass(db *mongo.Client, filter bson.M) (*Class, error) {
+	classCollection := GetClassCollection(db)
 	result := classCollection.FindOne(context.Background(), filter)
 	classItem := &Class{}
 	if err := result.Decode(&classItem); err != nil {
@@ -61,7 +62,7 @@ func GetAClass(classCollection *mongo.Collection, filter bson.M) (*Class, error)
 		}
 		return nil, &echo.HTTPError{
 			Code:     http.StatusInternalServerError,
-			Message:  "[Profile] Internal server error ",
+			Message:  "Internal server error ",
 			Internal: err,
 		}
 	}

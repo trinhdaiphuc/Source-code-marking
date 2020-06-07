@@ -10,7 +10,6 @@ import (
 	uuid "github.com/satori/go.uuid"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func (h *FileHandler) CreateFile(c echo.Context) (err error) {
@@ -39,26 +38,11 @@ func (h *FileHandler) CreateFile(c echo.Context) (err error) {
 	userID := claims["id"].(string)
 	fileCollection := models.GetFileCollection(h.DB)
 
-	exerciseCollection := models.GetExerciseCollection(h.DB)
-	resultFind := exerciseCollection.FindOne(context.Background(), bson.M{"_id": fileItem.ExerciseID})
-
-	exercise := &models.Exercise{}
-	if err := resultFind.Decode(&exercise); err != nil {
-		if err == mongo.ErrNoDocuments {
-			return &echo.HTTPError{
-				Code:     http.StatusNotFound,
-				Message:  "Not found Exercise",
-				Internal: err,
-			}
-		}
-		return &echo.HTTPError{
-			Code:     http.StatusInternalServerError,
-			Message:  "[GetExercise] Internal server error",
-			Internal: err,
-		}
+	filter := bson.M{"_id": fileItem.ExerciseID}
+	exercise, err := models.GetAExercise(h.DB, filter)
+	if err != nil {
+		return err
 	}
-
-	h.Logger.Debug("Time deadline ", exercise.Deadline.Sub(time.Now()))
 
 	if exercise.Deadline.Sub(time.Now()) < 0 {
 		return &echo.HTTPError{
@@ -67,18 +51,14 @@ func (h *FileHandler) CreateFile(c echo.Context) (err error) {
 		}
 	}
 
-	filter := bson.M{"user_id": userID, "exercise_id": fileItem.ExerciseID}
-	result := fileCollection.FindOne(context.Background(), filter)
-
-	data := &models.File{}
-	if err := result.Decode(&data); err != nil {
-		if err != mongo.ErrNoDocuments {
-			return &echo.HTTPError{
-				Code:     http.StatusInternalServerError,
-				Message:  "[GetExercise] Internal server error",
-				Internal: err,
-			}
-		}
+	filter = bson.M{"user_id": userID, "exercise_id": fileItem.ExerciseID}
+	data, err := models.GetAFile(h.DB, filter)
+	code := http.StatusInternalServerError
+	if he, ok := err.(*echo.HTTPError); ok {
+		code = he.Code
+	}
+	if code != http.StatusNotFound {
+		return err
 	}
 
 	if data.ID != "" {

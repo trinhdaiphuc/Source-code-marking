@@ -16,8 +16,7 @@ func (h *ClassHandler) DeleteClass(c echo.Context) (err error) {
 	claims := userToken.Claims.(jwt.MapClaims)
 	userID := claims["id"].(string)
 	classID := c.Param("id")
-	h.Logger.Debug("UserID ", userID, ", ClassID ", classID)
-	ctx := context.Background()
+
 	classCollection := models.GetClassCollection(h.DB)
 	update := bson.M{
 		"$set": bson.M{
@@ -27,7 +26,7 @@ func (h *ClassHandler) DeleteClass(c echo.Context) (err error) {
 	}
 
 	filter := bson.M{"_id": classID, "teachers._id": userID}
-	_, err = classCollection.UpdateOne(ctx, filter, update)
+	_, err = classCollection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		return &echo.HTTPError{
 			Code:     http.StatusInternalServerError,

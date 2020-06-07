@@ -102,7 +102,7 @@ func GetAUser(db *mongo.Client, filter bson.M, userRole string) (*User, error) {
 		}
 		return nil, &echo.HTTPError{
 			Code:     http.StatusInternalServerError,
-			Message:  "[Get user] Internal server error",
+			Message:  "Internal server error",
 			Internal: err,
 		}
 	}
@@ -120,7 +120,7 @@ func CreateAUser(db *mongo.Client, data *User) error {
 	if err != nil {
 		return &echo.HTTPError{
 			Code:     http.StatusBadRequest,
-			Message:  "[Signin] Internal server error",
+			Message:  "Internal server error",
 			Internal: err,
 		}
 	}

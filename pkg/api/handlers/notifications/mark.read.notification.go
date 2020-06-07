@@ -2,14 +2,33 @@ package notifications
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 
+	"github.com/dgrijalva/jwt-go"
+	"github.com/go-redis/redis/v8"
 	"github.com/labstack/echo/v4"
+	"github.com/trinhdaiphuc/Source-code-marking/internal"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+func sendNotification(db *mongo.Client, redisClient *redis.Client, userID, userEmail string) {
+	filter := bson.M{"user_id": userID, "is_deleted": false}
+
+	listParam := models.ListQueryParam{
+		PageSize:  5,
+		PageToken: 1,
+		OrderBy:   "created_at",
+		OrderType: internal.DESC.String(),
+	}
+
+	listNotification, _ := models.ListAllNotifications(db, filter, listParam)
+	message, _ := json.Marshal(listNotification.Notifications)
+	redisClient.Publish(context.Background(), userEmail, message).Err()
+}
 
 func (h *NotificationHandler) MarkReadNotification(c echo.Context) (err error) {
 	id := c.Param("id")
@@ -37,6 +56,13 @@ func (h *NotificationHandler) MarkReadNotification(c echo.Context) (err error) {
 			Internal: err,
 		}
 	}
+
+	userToken := c.Get("user").(*jwt.Token)
+	claims := userToken.Claims.(jwt.MapClaims)
+	userID := claims["id"].(string)
+	userEmail := claims["email"].(string)
+
+	go sendNotification(h.DB, h.RedisClient, userID, userEmail)
 
 	return c.NoContent(http.StatusNoContent)
 }

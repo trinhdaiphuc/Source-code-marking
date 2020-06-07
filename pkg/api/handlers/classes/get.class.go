@@ -11,8 +11,6 @@ import (
 
 func (h *ClassHandler) GetClass(c echo.Context) (err error) {
 	classID := c.Param("id")
-
-	classCollection := models.GetClassCollection(h.DB)
 	userToken := c.Get("user").(*jwt.Token)
 	claims := userToken.Claims.(jwt.MapClaims)
 	userRole := claims["role"].(string)
@@ -23,10 +21,9 @@ func (h *ClassHandler) GetClass(c echo.Context) (err error) {
 		filter["is_deleted"] = false
 	}
 
-	classItem, err := models.GetAClass(classCollection, filter)
+	classItem, err := models.GetAClass(h.DB, filter)
 
 	if err != nil {
-		h.Logger.Error("Error when get a class ", err)
 		return err
 	}
 

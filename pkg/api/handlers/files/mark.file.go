@@ -29,9 +29,7 @@ func publishMarkingNotification(
 		return
 	}
 
-	classCollection := models.GetClassCollection(db)
-	class, err := models.GetAClass(classCollection, bson.M{"_id": dataExercise.ClassID, "is_deleted": false})
-
+	class, err := models.GetAClass(db, bson.M{"_id": dataExercise.ClassID, "is_deleted": false})
 	if err != nil {
 		logger.Error("Error when get a class ", err)
 	}
@@ -50,23 +48,22 @@ func publishMarkingNotification(
 	notificationCollection := models.GetNotificationCollection(db)
 	notificationCollection.InsertOne(ctx, notification)
 
-	opts := []*options.FindOptions{}
-	opts = append(opts, options.Find().SetSort(bson.D{{"created_at", 1}}))
-	opts = append(opts, options.Find().SetSkip(0))
-	opts = append(opts, options.Find().SetLimit(5))
-	opts = append(opts, options.Find().SetProjection(bson.D{{"content", 1}, {"exercise_id", 1}, {"is_read", 1}}))
+	listParam := models.ListQueryParam{
+		PageSize:  5,
+		PageToken: 1,
+		OrderBy:   "created_at",
+		OrderType: internal.DESC.String(),
+	}
 
 	filter := bson.M{"user_id": dataFile.UserID, "is_deleted": false}
 
-	cursor, err := notificationCollection.Find(ctx, filter, opts...)
+	listNotification, err := models.ListAllNotifications(db, filter, listParam)
 	if err != nil {
-		logger.Error("Error when find ", err)
+		logger.Error("[Mark file] Error when find ", err)
 		return
 	}
-	notificationArray := []models.Notification{}
-	cursor.All(ctx, &notificationArray)
 
-	message, _ := json.Marshal(notificationArray)
+	message, _ := json.Marshal(listNotification.Notifications)
 	err = redisClient.Publish(ctx, user.Email, message).Err()
 
 	logger.Debug("User Email ", user.Email)
@@ -95,45 +92,14 @@ func (h *FileHandler) MarkFile(c echo.Context) (err error) {
 		}
 	}
 
-	ctx := context.Background()
-	fileCollection := models.GetFileCollection(h.DB)
-
-	resultFind := fileCollection.FindOne(context.Background(), bson.M{"_id": fileID, "is_deleted": false})
-
-	data := &models.File{}
-	if err := resultFind.Decode(&data); err != nil {
-		h.Logger.Debug("Error when sign in by email ", err)
-		if err == mongo.ErrNoDocuments {
-			return &echo.HTTPError{
-				Code:     http.StatusNotFound,
-				Message:  "Not found file",
-				Internal: err,
-			}
-		}
-		return &echo.HTTPError{
-			Code:     http.StatusInternalServerError,
-			Message:  "[GetFile] Internal server error",
-			Internal: err,
-		}
+	fileItem, err := models.GetAFile(h.DB, bson.M{"_id": fileID, "is_deleted": false})
+	if err != nil {
+		return err
 	}
 
-	exerciseCollection := models.GetExerciseCollection(h.DB)
-	resultFind = exerciseCollection.FindOne(context.Background(), bson.M{"_id": data.ExerciseID, "is_deleted": false})
-
-	exercise := &models.Exercise{}
-	if err := resultFind.Decode(&exercise); err != nil {
-		if err == mongo.ErrNoDocuments {
-			return &echo.HTTPError{
-				Code:     http.StatusNotFound,
-				Message:  "Not found Exercise",
-				Internal: err,
-			}
-		}
-		return &echo.HTTPError{
-			Code:     http.StatusInternalServerError,
-			Message:  "[GetExercise] Internal server error",
-			Internal: err,
-		}
+	exercise, err := models.GetAExercise(h.DB, bson.M{"_id": fileItem.ExerciseID, "is_deleted": false})
+	if err != nil {
+		return err
 	}
 
 	if exercise.Deadline.Sub(time.Now()) > 0 {
@@ -152,7 +118,8 @@ func (h *FileHandler) MarkFile(c echo.Context) (err error) {
 	}
 	filter := bson.M{"_id": fileID}
 
-	resultUpdate := fileCollection.FindOneAndUpdate(ctx, filter, update, options.FindOneAndUpdate().SetReturnDocument(1))
+	fileCollection := models.GetFileCollection(h.DB)
+	resultUpdate := fileCollection.FindOneAndUpdate(context.TODO(), filter, update, options.FindOneAndUpdate().SetReturnDocument(1))
 	err = resultUpdate.Decode(&file)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {

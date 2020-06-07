@@ -9,9 +9,9 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
+	"github.com/trinhdaiphuc/Source-code-marking/internal"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // Configure the upgrader
@@ -96,25 +96,17 @@ func (h *NotificationHandler) WebsocketNotification(c echo.Context) (err error) 
 	ctx := context.Background()
 	h.Logger.Info("Connect to websocket user: ", claims.Email)
 
-	notificationCollection := models.GetNotificationCollection(h.DB)
-
-	opts := []*options.FindOptions{}
-	opts = append(opts, options.Find().SetSort(bson.D{{"created_at", 1}}))
-	opts = append(opts, options.Find().SetSkip(0))
-	opts = append(opts, options.Find().SetLimit(5))
-	opts = append(opts, options.Find().SetProjection(bson.D{{"content", 1}, {"exercise_id", 1}, {"is_read", 1}}))
-
 	filter := bson.M{"user_id": claims.ID, "is_deleted": false}
 
-	cursor, err := notificationCollection.Find(ctx, filter, opts...)
-	if err != nil {
-		h.Logger.Error("Error when find ", err)
-		return
+	listParam := models.ListQueryParam{
+		PageSize:  5,
+		PageToken: 1,
+		OrderBy:   "created_at",
+		OrderType: internal.DESC.String(),
 	}
 
-	notificationArray := []models.Notification{}
-	cursor.All(ctx, &notificationArray)
-	data, _ := json.Marshal(notificationArray)
+	listNotification, err := models.ListAllNotifications(h.DB, filter, listParam)
+	data, _ := json.Marshal(listNotification.Notifications)
 
 	firstMsg := &WebsocketMessage{
 		Notifications: string(data),

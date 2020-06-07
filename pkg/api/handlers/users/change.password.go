@@ -9,7 +9,6 @@ import (
 	"github.com/trinhdaiphuc/Source-code-marking/internal"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func (h *UserHandler) ChangePassword(c echo.Context) (err error) {
@@ -30,37 +29,16 @@ func (h *UserHandler) ChangePassword(c echo.Context) (err error) {
 		}
 	}
 
-	user := &models.User{}
 	userToken := c.Get("user").(*jwt.Token)
 	claims := userToken.Claims.(jwt.MapClaims)
 	userID := claims["id"].(string)
+	userRole := claims["role"].(string)
 
 	filter := bson.M{"_id": userID}
-	userCollection := models.GetUserCollection(h.DB)
-	resultFind := userCollection.FindOne(context.Background(), bson.M{"_id": userID})
+	user, err := models.GetAUser(h.DB, filter, userRole)
 
-	ctx := context.Background()
-	if err := resultFind.Decode(&user); err != nil {
-		h.Logger.Debug("Error when sign in by email ", err)
-		if err == mongo.ErrNoDocuments {
-			return &echo.HTTPError{
-				Code:     http.StatusNotFound,
-				Message:  "Not found user ",
-				Internal: err,
-			}
-		}
-		return &echo.HTTPError{
-			Code:     http.StatusInternalServerError,
-			Message:  "[Get user] Internal server error",
-			Internal: err,
-		}
-	}
-
-	if user.IsDeleted {
-		return &echo.HTTPError{
-			Code:    http.StatusGone,
-			Message: "User has been deleted.",
-		}
+	if err != nil {
+		return err
 	}
 
 	if ok := internal.CheckPasswordHash(password.OldPassword, user.Password); !ok {
@@ -86,7 +64,8 @@ func (h *UserHandler) ChangePassword(c echo.Context) (err error) {
 		},
 	}
 
-	_, err = userCollection.UpdateOne(ctx, filter, update)
+	userCollection := models.GetUserCollection(h.DB)
+	_, err = userCollection.UpdateOne(context.TODO(), filter, update)
 
 	if err != nil {
 		return &echo.HTTPError{

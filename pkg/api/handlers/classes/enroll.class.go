@@ -17,48 +17,27 @@ func (h *ClassHandler) EnrollClass(c echo.Context) (err error) {
 	claims := userToken.Claims.(jwt.MapClaims)
 	userID := claims["id"].(string)
 	classID := c.Param("id")
+	userRole := claims["role"].(string)
 
-	user := models.User{}
-	ctx := context.Background()
-
-	userCollection := models.GetUserCollection(h.DB)
-	result := userCollection.FindOne(ctx, bson.M{"_id": userID})
-	if err := result.Decode(&user); err != nil {
-		if err == mongo.ErrNoDocuments {
-			return &echo.HTTPError{
-				Code:     http.StatusNotFound,
-				Message:  "Not found user",
-				Internal: err,
-			}
-		}
-		return &echo.HTTPError{
-			Code:     http.StatusInternalServerError,
-			Message:  "[Profile] Internal server error ",
-			Internal: err,
-		}
+	user, err := models.GetAUser(h.DB, bson.M{"_id": userID}, userRole)
+	if err != nil {
+		return err
 	}
+
 	user.Password = ""
-
-	if user.IsDeleted {
-		return &echo.HTTPError{
-			Code:    http.StatusGone,
-			Message: "User has been deleted.",
-		}
-	}
-
-	classCollection := models.GetClassCollection(h.DB)
 
 	filter := bson.M{"_id": classID, "is_deleted": false}
 	data := &models.Class{}
 	update := bson.M{
 		"$addToSet": bson.M{
 			"students": bson.M{
-				"$each": []models.User{user},
+				"$each": []models.User{*user},
 			},
 		},
 	}
 
-	result = classCollection.FindOneAndUpdate(ctx, filter, update, options.FindOneAndUpdate().SetReturnDocument(1))
+	classCollection := models.GetClassCollection(h.DB)
+	result := classCollection.FindOneAndUpdate(context.TODO(), filter, update, options.FindOneAndUpdate().SetReturnDocument(1))
 
 	if err = result.Decode(&data); err != nil {
 		if err != mongo.ErrNoDocuments {

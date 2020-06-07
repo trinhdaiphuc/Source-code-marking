@@ -1,7 +1,6 @@
 package users
 
 import (
-	"context"
 	"net/http"
 	"os"
 	"time"
@@ -11,7 +10,6 @@ import (
 	"github.com/trinhdaiphuc/Source-code-marking/internal"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func sendValidationMail(u models.User, jwtKey string, logger *internal.AppLog) {
@@ -89,25 +87,10 @@ func (h *UserHandler) Signup(c echo.Context) (err error) {
 	u.CreatedAt = time.Now().UTC()
 	u.UpdatedAt = time.Now().UTC()
 
-	roleCollection := models.GetRoleCollection(h.DB)
-	result := roleCollection.FindOne(context.TODO(), bson.M{"name": u.Role})
+	_, err = models.GetARole(h.DB, bson.M{"name": u.Role})
 
-	role := &models.Role{}
-
-	if err := result.Decode(&role); err != nil {
-		h.Logger.Debug("Error when sign in by email ", err)
-		if err == mongo.ErrNoDocuments {
-			return &echo.HTTPError{
-				Code:     http.StatusBadRequest,
-				Message:  "Invalid role",
-				Internal: err,
-			}
-		}
-		return &echo.HTTPError{
-			Code:     http.StatusInternalServerError,
-			Message:  "[Signup] Internal server error",
-			Internal: err,
-		}
+	if err != nil {
+		return err
 	}
 
 	// Save user

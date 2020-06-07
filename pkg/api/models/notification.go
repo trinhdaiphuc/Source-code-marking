@@ -1,9 +1,15 @@
 package models
 
 import (
+	"context"
+	"net/http"
 	"time"
 
+	"github.com/labstack/echo/v4"
+	"github.com/trinhdaiphuc/Source-code-marking/internal"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type (
@@ -38,4 +44,49 @@ func ConvertNotificationArrayToListNotification(Notifications []Notification, ne
 	}
 
 	return listNotification
+}
+
+func ListAllNotifications(db *mongo.Client, filter bson.M, listParam ListQueryParam) (*ListNotification, error) {
+	limit := listParam.PageSize
+	page := listParam.PageToken
+	skip := (page - 1) * limit
+	orderBy := "created_at"
+	orderType := 1
+	if listParam.OrderType == internal.DESC.String() {
+		orderType = -1
+	}
+
+	if listParam.OrderBy != "" {
+		orderBy = listParam.OrderBy
+	}
+
+	opts := []*options.FindOptions{}
+	opts = append(opts, options.Find().SetSort(bson.D{{orderBy, orderType}}))
+	opts = append(opts, options.Find().SetSkip(skip))
+	opts = append(opts, options.Find().SetLimit(limit))
+
+	notificationCollection := GetNotificationCollection(db)
+	ctx := context.TODO()
+	cursor, err := notificationCollection.Find(ctx, filter, opts...)
+	if err != nil {
+		return nil, &echo.HTTPError{
+			Code:     http.StatusInternalServerError,
+			Message:  "[Get all user] Internal server error",
+			Internal: err,
+		}
+	}
+	if cursor == nil {
+		return nil, &echo.HTTPError{
+			Code:    http.StatusNotFound,
+			Message: "Not found notifications",
+		}
+	}
+
+	defer cursor.Close(ctx)
+
+	notificationArray := []Notification{}
+	cursor.All(ctx, &notificationArray)
+	totalRecords, err := notificationCollection.CountDocuments(ctx, filter)
+
+	return ConvertNotificationArrayToListNotification(notificationArray, page+1, totalRecords), nil
 }

@@ -1,7 +1,6 @@
 package users
 
 import (
-	"context"
 	"net/http"
 	"time"
 
@@ -10,7 +9,6 @@ import (
 	"github.com/trinhdaiphuc/Source-code-marking/internal"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func (h *UserHandler) CreateUser(c echo.Context) (err error) {
@@ -42,20 +40,15 @@ func (h *UserHandler) CreateUser(c echo.Context) (err error) {
 		}
 	}
 
-	ctx := context.Background()
 	// Check email had created or not.
-	userCollection := models.GetUserCollection(h.DB)
-	resultFind := userCollection.FindOne(ctx, bson.M{"email": u.Email})
+	user, err := models.GetAUser(h.DB, bson.M{"email": u.Email}, u.Role)
 
-	user := models.User{}
-	if err := resultFind.Decode(&user); err != nil {
-		h.Logger.Debug("Error when sign in by email ", err)
-		if err != mongo.ErrNoDocuments {
-			return &echo.HTTPError{
-				Code:    http.StatusInternalServerError,
-				Message: "MongoDB is not avalable.",
-			}
-		}
+	code := http.StatusInternalServerError
+	if he, ok := err.(*echo.HTTPError); ok {
+		code = he.Code
+	}
+	if code == http.StatusInternalServerError {
+		return err
 	}
 
 	if user.Email != "" {
@@ -85,37 +78,17 @@ func (h *UserHandler) CreateUser(c echo.Context) (err error) {
 	u.CreatedAt = time.Now().UTC()
 	u.UpdatedAt = time.Now().UTC()
 
-	roleCollection := models.GetRoleCollection(h.DB)
-	result := roleCollection.FindOne(ctx, bson.M{"name": u.Role})
+	_, err = models.GetARole(h.DB, bson.M{"name": u.Role})
 
-	role := &models.Role{}
-
-	if err := result.Decode(&role); err != nil {
-		h.Logger.Debug("Error when sign in by email ", err)
-		if err == mongo.ErrNoDocuments {
-			return &echo.HTTPError{
-				Code:     http.StatusBadRequest,
-				Message:  "Invalid role",
-				Internal: err,
-			}
-		}
-		return &echo.HTTPError{
-			Code:     http.StatusInternalServerError,
-			Message:  "[Signup] Internal server error",
-			Internal: err,
-		}
+	if err != nil {
+		return err
 	}
 
 	// Save user
-	_, err = userCollection.InsertOne(context.Background(), u)
-	if err != nil {
-		h.Logger.Debug("Error when sign-up ", err.Error())
-		return &echo.HTTPError{
-			Code:     http.StatusInternalServerError,
-			Message:  "MongoDB is not avalable.",
-			Internal: err,
-		}
+	if err = models.CreateAUser(h.DB, u); err != nil {
+		return err
 	}
+
 	u.Password = ""
 	go sendValidationMail(*u, h.JWTKey, h.Logger)
 	return c.JSON(http.StatusCreated, u)
