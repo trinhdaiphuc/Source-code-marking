@@ -29,6 +29,11 @@ type (
 		NextPageToken int64          `json:"next_page_token"`
 		TotalRecords  int64          `json:"total_records"`
 	}
+
+	ListNotificationWebsocket struct {
+		Notifications []Notification `json:"notifications"`
+		TotalUnread   int64          `json:"total_unread"`
+	}
 )
 
 func GetNotificationCollection(db *mongo.Client) *mongo.Collection {
