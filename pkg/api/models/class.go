@@ -1,8 +1,12 @@
 package models
 
 import (
+	"context"
+	"net/http"
 	"time"
 
+	"github.com/labstack/echo/v4"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -42,4 +46,25 @@ func ConvertClassArrayToListClass(Classs []Class, nextPageToken, totalRecords in
 	}
 
 	return listClass
+}
+
+func GetAClass(db *mongo.Client, filter bson.M) (*Class, error) {
+	classCollection := GetClassCollection(db)
+	result := classCollection.FindOne(context.Background(), filter)
+	classItem := &Class{}
+	if err := result.Decode(&classItem); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, &echo.HTTPError{
+				Code:     http.StatusNotFound,
+				Message:  "Not found class ",
+				Internal: err,
+			}
+		}
+		return nil, &echo.HTTPError{
+			Code:     http.StatusInternalServerError,
+			Message:  "Internal server error ",
+			Internal: err,
+		}
+	}
+	return classItem, nil
 }

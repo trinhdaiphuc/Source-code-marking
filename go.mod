@@ -9,7 +9,6 @@ require (
 	github.com/facebookgo/subset v0.0.0-20200203212716-c811ad88dec4 // indirect
 	github.com/fatih/structs v1.1.0
 	github.com/go-playground/validator/v10 v10.3.0
-	github.com/go-redis/redis v6.15.8+incompatible // indirect
 	github.com/go-redis/redis/v8 v8.0.0-beta.3
 	github.com/gorilla/websocket v1.4.2
 	github.com/joho/godotenv v1.3.0

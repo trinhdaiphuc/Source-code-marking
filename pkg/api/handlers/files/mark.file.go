@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/labstack/echo/v4"
+	uuid "github.com/satori/go.uuid"
 	"github.com/trinhdaiphuc/Source-code-marking/internal"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 	"go.mongodb.org/mongo-driver/bson"
@@ -15,19 +16,58 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func publishMarkingNotification(redisClient *redis.Client, logger *internal.AppLog, db *mongo.Client, data models.File) {
+func publishMarkingNotification(
+	redisClient *redis.Client, logger *internal.AppLog, db *mongo.Client,
+	dataFile models.File, dataExercise models.Exercise) {
 	ctx := context.Background()
 	userCollection := models.GetUserCollection(db)
 	user := &models.User{}
-	result := userCollection.FindOne(ctx, bson.M{"_id": data.UserID})
+	result := userCollection.FindOne(ctx, bson.M{"_id": dataFile.UserID})
 
 	if err := result.Decode(&user); err != nil {
 		logger.Error("Error when get user ", err)
 		return
 	}
 
-	message, _ := json.Marshal(data)
-	err := redisClient.Publish(ctx, user.Email, message).Err()
+	class, err := models.GetAClass(db, bson.M{"_id": dataExercise.ClassID, "is_deleted": false})
+	if err != nil {
+		logger.Error("Error when get a class ", err)
+	}
+
+	notification := &models.Notification{
+		ID:         uuid.NewV4().String(),
+		Content:    "Bài tập " + dataExercise.Name + " của lớp " + class.Name + " đã được chấm",
+		IsRead:     false,
+		IsDeleted:  false,
+		ExerciseID: dataFile.ExerciseID,
+		UserID:     dataFile.UserID,
+		CreatedAt:  time.Now().UTC(),
+		UpdatedAt:  time.Now().UTC(),
+	}
+
+	notificationCollection := models.GetNotificationCollection(db)
+	notificationCollection.InsertOne(ctx, notification)
+
+	listParam := models.ListQueryParam{
+		PageSize:  5,
+		PageToken: 1,
+		OrderBy:   "created_at",
+		OrderType: internal.DESC.String(),
+	}
+
+	filter := bson.M{"user_id": dataFile.UserID, "is_deleted": false}
+
+	listNotification, err := models.ListAllNotifications(db, filter, listParam)
+	if err != nil {
+		logger.Error("[Mark file] Error when find ", err)
+		return
+	}
+
+	message, _ := json.Marshal(listNotification.Notifications)
+	err = redisClient.Publish(ctx, user.Email, message).Err()
+
+	logger.Debug("User Email ", user.Email)
+
 	if err != nil {
 		logger.Error("Error when publish ", err)
 	}
@@ -52,45 +92,14 @@ func (h *FileHandler) MarkFile(c echo.Context) (err error) {
 		}
 	}
 
-	ctx := context.Background()
-	fileCollection := models.GetFileCollection(h.DB)
-
-	resultFind := fileCollection.FindOne(context.Background(), bson.M{"_id": fileID, "is_deleted": false})
-
-	data := &models.File{}
-	if err := resultFind.Decode(&data); err != nil {
-		h.Logger.Debug("Error when sign in by email ", err)
-		if err == mongo.ErrNoDocuments {
-			return &echo.HTTPError{
-				Code:     http.StatusNotFound,
-				Message:  "Not found file",
-				Internal: err,
-			}
-		}
-		return &echo.HTTPError{
-			Code:     http.StatusInternalServerError,
-			Message:  "[GetFile] Internal server error",
-			Internal: err,
-		}
+	fileItem, err := models.GetAFile(h.DB, bson.M{"_id": fileID, "is_deleted": false})
+	if err != nil {
+		return err
 	}
 
-	exerciseCollection := models.GetExerciseCollection(h.DB)
-	resultFind = exerciseCollection.FindOne(context.Background(), bson.M{"_id": data.ExerciseID, "is_deleted": false})
-
-	exercise := &models.Exercise{}
-	if err := resultFind.Decode(&exercise); err != nil {
-		if err == mongo.ErrNoDocuments {
-			return &echo.HTTPError{
-				Code:     http.StatusNotFound,
-				Message:  "Not found Exercise",
-				Internal: err,
-			}
-		}
-		return &echo.HTTPError{
-			Code:     http.StatusInternalServerError,
-			Message:  "[GetExercise] Internal server error",
-			Internal: err,
-		}
+	exercise, err := models.GetAExercise(h.DB, bson.M{"_id": fileItem.ExerciseID, "is_deleted": false})
+	if err != nil {
+		return err
 	}
 
 	if exercise.Deadline.Sub(time.Now()) > 0 {
@@ -109,7 +118,8 @@ func (h *FileHandler) MarkFile(c echo.Context) (err error) {
 	}
 	filter := bson.M{"_id": fileID}
 
-	resultUpdate := fileCollection.FindOneAndUpdate(ctx, filter, update, options.FindOneAndUpdate().SetReturnDocument(1))
+	fileCollection := models.GetFileCollection(h.DB)
+	resultUpdate := fileCollection.FindOneAndUpdate(context.TODO(), filter, update, options.FindOneAndUpdate().SetReturnDocument(1))
 	err = resultUpdate.Decode(&file)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -125,6 +135,6 @@ func (h *FileHandler) MarkFile(c echo.Context) (err error) {
 			Internal: err,
 		}
 	}
-	go publishMarkingNotification(h.RedisClient, h.Logger, h.DB, *file)
+	go publishMarkingNotification(h.RedisClient, h.Logger, h.DB, *file, *exercise)
 	return c.NoContent(http.StatusNoContent)
 }

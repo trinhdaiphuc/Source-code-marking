@@ -9,7 +9,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func (h *UserHandler) UpdateUser(c echo.Context) (err error) {
@@ -21,36 +20,25 @@ func (h *UserHandler) UpdateUser(c echo.Context) (err error) {
 		return
 	}
 
+	id := c.Param("id")
+
 	userToken := c.Get("user").(*jwt.Token)
 	claims := userToken.Claims.(jwt.MapClaims)
 	userID := claims["id"].(string)
+	userRole := claims["role"].(string)
+
+	if userRole != "ADMIN" && id != userID {
+		return echo.NewHTTPError(http.StatusForbidden, "Forbidden update user account")
+	}
 
 	userCollection := models.GetUserCollection(h.DB)
 	ctx := context.Background()
+	filter := bson.M{"_id": id}
 	// Get the old data of user
-	result := userCollection.FindOne(ctx, bson.M{"_id": userID})
-	data := &models.User{}
-	if err = result.Decode(&data); err != nil {
-		h.Logger.Error("Error when get a user: ", err)
-		if err == mongo.ErrNoDocuments {
-			return &echo.HTTPError{
-				Code:     http.StatusNotFound,
-				Message:  "Not found user",
-				Internal: err,
-			}
-		}
-		return &echo.HTTPError{
-			Code:     http.StatusInternalServerError,
-			Message:  "[Update user] Internal server error",
-			Internal: err,
-		}
-	}
+	data, err := models.GetAUser(h.DB, filter, u.Role)
 
-	if data.IsDeleted {
-		return &echo.HTTPError{
-			Code:    http.StatusGone,
-			Message: "User has been deleted.",
-		}
+	if err != nil {
+		return err
 	}
 
 	update := bson.M{
@@ -59,7 +47,6 @@ func (h *UserHandler) UpdateUser(c echo.Context) (err error) {
 			"updated_at": time.Now().UTC(),
 		},
 	}
-	filter := bson.M{"_id": userID}
 
 	_, err = userCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
@@ -69,10 +56,11 @@ func (h *UserHandler) UpdateUser(c echo.Context) (err error) {
 			Internal: err,
 		}
 	}
+
 	// Generate encoded token and send it as response
 	tokenString, err := createTokenWithUser(*data, h.JWTKey, 24)
 	if err != nil {
-		return err
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
 	c.Response().Header().Set("Access-Token", tokenString)

@@ -2,7 +2,6 @@ package users
 
 import (
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -12,24 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-func sendValidationMail(u models.User, jwtKey string, logger *internal.AppLog) {
-	token, _ := createTokenWithUser(u, jwtKey, 24)
-	validationLink := os.Getenv("FRONT_END_SERVER_HOST") + "/confirmation/" + token
-	logger.Info("Validation link ", validationLink)
-	content := "Please click this link to verify your email: " + validationLink
-	subject := "Welcome to Source code marking"
-	id, err := internal.SendMail(os.Getenv("EMAIL_USERNAME"), u.Email, subject, content)
-	if err != nil {
-		logger.Error("Error when send mail ", err)
-	} else {
-		logger.Info("Send mail success with id ", id)
-	}
-}
-
-// Signup handler
-func (h *UserHandler) Signup(c echo.Context) (err error) {
-	h.Logger.Info("Sign-up handler")
-
+func (h *UserHandler) CreateUser(c echo.Context) (err error) {
 	// Bind
 	u := &models.User{}
 
@@ -52,7 +34,10 @@ func (h *UserHandler) Signup(c echo.Context) (err error) {
 	h.Logger.Debug("Sign-up parameters: ", *u)
 	// Validate
 	if u.Email == "" || len(u.Password) < 6 {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid email or password")
+		return &echo.HTTPError{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid email or password",
+		}
 	}
 
 	// Check email had created or not.
@@ -67,11 +52,17 @@ func (h *UserHandler) Signup(c echo.Context) (err error) {
 	}
 
 	if user.Email != "" {
-		return echo.NewHTTPError(http.StatusConflict, "This email have already existed.")
+		return &echo.HTTPError{
+			Code:    http.StatusConflict,
+			Message: "This email have already existed.",
+		}
 	}
 
 	if !(u.Role == "STUDENT" || u.Role == "TEACHER") {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid arguments: role")
+		return &echo.HTTPError{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid arguments: role",
+		}
 	}
 
 	// Hash password

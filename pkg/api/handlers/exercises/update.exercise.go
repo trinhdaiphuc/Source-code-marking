@@ -9,7 +9,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -26,9 +25,6 @@ func (h *ExerciseHandler) UpdateExercise(c echo.Context) (err error) {
 		}
 	}
 
-	ctx := context.Background()
-	exerciseCollection := models.GetExerciseCollection(h.DB)
-
 	userToken := c.Get("user").(*jwt.Token)
 	claims := userToken.Claims.(jwt.MapClaims)
 	userRole := claims["role"].(string)
@@ -37,23 +33,9 @@ func (h *ExerciseHandler) UpdateExercise(c echo.Context) (err error) {
 		filter["is_deleted"] = false
 	}
 
-	resultFind := exerciseCollection.FindOne(ctx, filter)
-
-	data := models.Exercise{}
-	if err := resultFind.Decode(&data); err != nil {
-		h.Logger.Debug("Error when sign in by email ", err)
-		if err == mongo.ErrNoDocuments {
-			return &echo.HTTPError{
-				Code:     http.StatusBadRequest,
-				Message:  "Not found Exercise",
-				Internal: err,
-			}
-		}
-		return &echo.HTTPError{
-			Code:     http.StatusInternalServerError,
-			Message:  "[UpdateExercise] Internal server error",
-			Internal: err,
-		}
+	data, err := models.GetAExercise(h.DB, filter)
+	if err != nil {
+		return err
 	}
 
 	update := bson.M{
@@ -66,8 +48,8 @@ func (h *ExerciseHandler) UpdateExercise(c echo.Context) (err error) {
 	}
 
 	filter = bson.M{"_id": ExerciseID}
-
-	resultUpdate := exerciseCollection.FindOneAndUpdate(ctx, filter, update, options.FindOneAndUpdate().SetReturnDocument(1))
+	exerciseCollection := models.GetExerciseCollection(h.DB)
+	resultUpdate := exerciseCollection.FindOneAndUpdate(context.TODO(), filter, update, options.FindOneAndUpdate().SetReturnDocument(1))
 	err = resultUpdate.Decode(&data)
 	if err != nil {
 		return &echo.HTTPError{

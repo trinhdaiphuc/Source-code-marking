@@ -10,7 +10,6 @@ import (
 	uuid "github.com/satori/go.uuid"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func (h *ExerciseHandler) CreateExercise(c echo.Context) (err error) {
@@ -36,26 +35,10 @@ func (h *ExerciseHandler) CreateExercise(c echo.Context) (err error) {
 	claims := userToken.Claims.(jwt.MapClaims)
 	userID := claims["id"].(string)
 
-	h.Logger.Debug("Create Exercise parameters ", exerciseItem)
-
-	classItem := &models.Class{}
-	classCollection := models.GetClassCollection(h.DB)
 	filter := bson.M{"_id": exerciseItem.ClassID, "is_deleted": false, "teachers._id": userID}
-	result := classCollection.FindOne(context.Background(), filter)
-	if err := result.Decode(&classItem); err != nil {
-		h.Logger.Info("Error when sign in by email ", err)
-		if err == mongo.ErrNoDocuments {
-			return &echo.HTTPError{
-				Code:     http.StatusNotFound,
-				Message:  "Not found class with teacher id",
-				Internal: err,
-			}
-		}
-		return &echo.HTTPError{
-			Code:     http.StatusInternalServerError,
-			Message:  "[Profile] Internal server error ",
-			Internal: err,
-		}
+	_, err = models.GetAClass(h.DB, filter)
+	if err != nil {
+		return err
 	}
 
 	exerciseItem.ID = uuid.NewV4().String()

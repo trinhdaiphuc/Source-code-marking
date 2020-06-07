@@ -1,8 +1,12 @@
 package models
 
 import (
+	"context"
+	"net/http"
 	"time"
 
+	"github.com/labstack/echo/v4"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -40,4 +44,27 @@ func ConvertFileArrayToListFile(Files []File, nextPageToken, totalRecords int64)
 		listFile.Files[i].Comments = nil
 	}
 	return listFile
+}
+
+func GetAFile(db *mongo.Client, filter bson.M) (*File, error) {
+	fileCollection := GetFileCollection(db)
+	result := fileCollection.FindOne(context.TODO(), filter)
+
+	data := &File{}
+	if err := result.Decode(&data); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, &echo.HTTPError{
+				Code:     http.StatusNotFound,
+				Message:  "Not found file",
+				Internal: err,
+			}
+		}
+		return nil, &echo.HTTPError{
+			Code:     http.StatusInternalServerError,
+			Message:  "Internal server error",
+			Internal: err,
+		}
+	}
+
+	return data, nil
 }

@@ -10,7 +10,6 @@ import (
 	uuid "github.com/satori/go.uuid"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func (h *ClassHandler) CreateClass(c echo.Context) (err error) {
@@ -18,6 +17,7 @@ func (h *ClassHandler) CreateClass(c echo.Context) (err error) {
 	userToken := c.Get("user").(*jwt.Token)
 	claims := userToken.Claims.(jwt.MapClaims)
 	userID := claims["id"].(string)
+	userRole := claims["role"].(string)
 
 	if err := c.Bind(classItem); err != nil {
 		return &echo.HTTPError{
@@ -35,36 +35,21 @@ func (h *ClassHandler) CreateClass(c echo.Context) (err error) {
 		}
 	}
 
-	user := models.User{}
-	userCollection := models.GetUserCollection(h.DB)
 	filter := bson.M{"_id": userID, "is_deleted": false}
-
-	result := userCollection.FindOne(context.Background(), filter)
-	if err := result.Decode(&user); err != nil {
-		if err == mongo.ErrNoDocuments {
-			return &echo.HTTPError{
-				Code:     http.StatusNotFound,
-				Message:  "Not found user or user is deleted",
-				Internal: err,
-			}
-		}
-		return &echo.HTTPError{
-			Code:     http.StatusInternalServerError,
-			Message:  "[Profile] Internal server error ",
-			Internal: err,
-		}
+	user, err := models.GetAUser(h.DB, filter, userRole)
+	if err != nil {
+		return err
 	}
+
 	user.Password = ""
 	classItem.ID = uuid.NewV4().String()
-	classItem.Teachers = []models.User{user}
+	classItem.Teachers = []models.User{*user}
 	classItem.IsDeleted = false
 	classItem.CreatedAt = time.Now().UTC()
 	classItem.UpdatedAt = time.Now().UTC()
 
 	classCollection := models.GetClassCollection(h.DB)
-
-	ctx := context.Background()
-	_, err = classCollection.InsertOne(ctx, classItem)
+	_, err = classCollection.InsertOne(context.TODO(), classItem)
 
 	if err != nil {
 		return &echo.HTTPError{

@@ -8,6 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -42,6 +43,13 @@ func (h *CommentHandler) UpdateComment(c echo.Context) (err error) {
 	result := fileCollection.FindOneAndUpdate(ctx, filter, update, options.FindOneAndUpdate().SetReturnDocument(1))
 
 	if err := result.Decode(&fileItem); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return &echo.HTTPError{
+				Code:     http.StatusNotFound,
+				Message:  "Not found comment",
+				Internal: err,
+			}
+		}
 		return &echo.HTTPError{
 			Code:     http.StatusInternalServerError,
 			Message:  "[CreateComment] Internal server error",

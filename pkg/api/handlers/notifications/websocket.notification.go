@@ -2,12 +2,16 @@ package notifications
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"os"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
+	"github.com/trinhdaiphuc/Source-code-marking/internal"
+	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 // Configure the upgrader
@@ -32,10 +36,9 @@ type Claims struct {
 
 // Define our message object
 type WebsocketMessage struct {
-	Email    string `json:"email"`
-	ID       string `json:"id"`
-	Username string `json:"username"`
-	Message  string `json:"message"`
+	Jwt            string `json:"jwt,omitempty"`
+	NotificationID string `json:"notification_id,omitempty"`
+	Notifications  string `json:"notifications,omitempty"`
 }
 
 func (h *NotificationHandler) WebsocketNotification(c echo.Context) (err error) {
@@ -46,13 +49,12 @@ func (h *NotificationHandler) WebsocketNotification(c echo.Context) (err error) 
 	defer ws.Close()
 
 	msg := &WebsocketMessage{}
-	_, message, err := ws.ReadMessage()
+	err = ws.ReadJSON(&msg)
 	if err != nil {
 		return err
 	}
-	jwtString := string(message[:])
-	h.Logger.Debug("JWT ", jwtString)
-	if jwtString == "" {
+
+	if msg.Jwt == "" {
 		return &echo.HTTPError{
 			Code:    http.StatusBadRequest,
 			Message: "Missing token",
@@ -61,7 +63,7 @@ func (h *NotificationHandler) WebsocketNotification(c echo.Context) (err error) 
 
 	// Initialize a new instance of `Claims`
 	claims := &Claims{}
-	tkn, err := jwt.ParseWithClaims(jwtString, claims,
+	tkn, err := jwt.ParseWithClaims(msg.Jwt, claims,
 		func(token *jwt.Token) (interface{}, error) {
 			return []byte(os.Getenv("SECRET_KEY")), nil
 		})
@@ -87,11 +89,38 @@ func (h *NotificationHandler) WebsocketNotification(c echo.Context) (err error) 
 		}
 	}
 
-	h.WebsocketClients[ws] = claims.Email
+	if h.WebsocketClients[ws] == "" {
+		h.WebsocketClients[ws] = claims.Email
+	}
+
 	ctx := context.Background()
 	h.Logger.Info("Connect to websocket user: ", claims.Email)
 
+	filter := bson.M{"user_id": claims.ID, "is_deleted": false}
+
+	listParam := models.ListQueryParam{
+		PageSize:  5,
+		PageToken: 1,
+		OrderBy:   "created_at",
+		OrderType: internal.DESC.String(),
+	}
+
+	listNotification, err := models.ListAllNotifications(h.DB, filter, listParam)
+	data, _ := json.Marshal(listNotification.Notifications)
+
+	firstMsg := &WebsocketMessage{
+		Notifications: string(data),
+	}
+
+	err = ws.WriteJSON(firstMsg)
+	if err != nil {
+		h.Logger.Error(err)
+		delete(h.WebsocketClients, ws)
+		return
+	}
+
 	pubsub := h.RedisClient.Subscribe(ctx, claims.Email)
+
 	// Wait for confirmation that subscription is created before publishing anything.
 	_, err = pubsub.Receive(ctx)
 	if err != nil {
@@ -99,13 +128,16 @@ func (h *NotificationHandler) WebsocketNotification(c echo.Context) (err error) 
 	}
 
 	ch := pubsub.Channel()
+	defer pubsub.Close()
+
 	for {
+		writeMsg := &WebsocketMessage{}
 		// Consume messages.
 		for msgRedis := range ch {
-			h.Logger.Debug(msgRedis.Channel, " ", msgRedis.Payload)
-			// Read
-			msg.Message = msgRedis.Payload
-			err = ws.WriteJSON(msg)
+			h.Logger.Debug("Message in channel ", msgRedis.Channel, " ", msgRedis.Payload)
+			// Write
+			writeMsg.Notifications = msgRedis.Payload
+			err = ws.WriteJSON(writeMsg)
 			if err != nil {
 				h.Logger.Error(err)
 				delete(h.WebsocketClients, ws)
