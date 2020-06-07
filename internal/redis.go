@@ -8,7 +8,7 @@ import (
 )
 
 func RedisSetCachedWithHash(key string, redisClient *redis.Client, values interface{}) (err error) {
-	ctx := context.Background()
+	ctx := context.TODO()
 	convertMap := structs.Map(values)
 	err = redisClient.HMSet(ctx, key, convertMap).Err()
 	return

@@ -1,8 +1,12 @@
 package models
 
 import (
+	"context"
+	"net/http"
 	"time"
 
+	"github.com/labstack/echo/v4"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -39,4 +43,27 @@ func ConvertExerciseArrayToListExercise(Exercises []Exercise, nextPageToken, tot
 	}
 
 	return listExercise
+}
+
+func GetAExercise(db *mongo.Client, filter bson.M) (*Exercise, error) {
+	exerciseCollection := GetExerciseCollection(db)
+	result := exerciseCollection.FindOne(context.Background(), filter)
+
+	exerciseItem := &Exercise{}
+
+	if err := result.Decode(&exerciseItem); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, &echo.HTTPError{
+				Code:     http.StatusNotFound,
+				Message:  "Not found exercise",
+				Internal: err,
+			}
+		}
+		return nil, &echo.HTTPError{
+			Code:     http.StatusInternalServerError,
+			Message:  "[Delete exercise] Internal server error",
+			Internal: err,
+		}
+	}
+	return exerciseItem, nil
 }

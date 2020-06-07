@@ -1,7 +1,6 @@
 package users
 
 import (
-	"context"
 	"net/http"
 	"time"
 
@@ -13,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func (h *UserHandler) signinByEmail(u models.User, userCollection *mongo.Collection) (*models.User, error) {
+func (h *UserHandler) signinByEmail(u models.User, db *mongo.Client) (*models.User, error) {
 	// Validate
 	if len(u.Password) < 6 {
 		return nil, &echo.HTTPError{
@@ -22,35 +21,16 @@ func (h *UserHandler) signinByEmail(u models.User, userCollection *mongo.Collect
 		}
 	}
 
-	result := userCollection.FindOne(context.Background(), bson.M{"email": u.Email})
+	user, err := models.GetAUser(db, bson.M{"email": u.Email}, u.Role)
 
-	user := &models.User{}
-	if err := result.Decode(&user); err != nil {
-		h.Logger.Info("Error when sign in by email ", err)
-		if err == mongo.ErrNoDocuments {
-			return nil, &echo.HTTPError{
-				Code:    http.StatusUnauthorized,
-				Message: "Invalid email or password.",
-			}
-		}
-		return nil, &echo.HTTPError{
-			Code:     http.StatusInternalServerError,
-			Message:  "[Signin] Internal server error",
-			Internal: err,
-		}
+	if err != nil {
+		return nil, err
 	}
 
 	if !user.IsVerified {
 		return nil, &echo.HTTPError{
 			Code:    http.StatusUnauthorized,
 			Message: "Email has not verified.",
-		}
-	}
-
-	if user.IsDeleted {
-		return nil, &echo.HTTPError{
-			Code:    http.StatusGone,
-			Message: "User has been deleted.",
 		}
 	}
 
@@ -71,7 +51,7 @@ func (h *UserHandler) signinByEmail(u models.User, userCollection *mongo.Collect
 	return user, nil
 }
 
-func (h *UserHandler) signinByThirdparty(u *models.User, userCollection *mongo.Collection) (*models.User, error) {
+func (h *UserHandler) signinByThirdparty(u *models.User, db *mongo.Client) (*models.User, error) {
 	if u.Password != "" {
 		return nil, &echo.HTTPError{
 			Code:    http.StatusBadRequest,
@@ -86,11 +66,14 @@ func (h *UserHandler) signinByThirdparty(u *models.User, userCollection *mongo.C
 		}
 	}
 
-	result := userCollection.FindOne(context.Background(), bson.M{"email": u.Email})
+	data, err := models.GetAUser(db, bson.M{"email": u.Email}, u.Role)
+	if err != nil {
+		code := http.StatusInternalServerError
+		if he, ok := err.(*echo.HTTPError); ok {
+			code = he.Code
+		}
 
-	data := &models.User{}
-	if err := result.Decode(&data); err != nil {
-		if err == mongo.ErrNoDocuments {
+		if code == http.StatusNotFound {
 			data = &models.User{
 				ID:         uuid.NewV4().String(),
 				Email:      u.Email,
@@ -101,36 +84,12 @@ func (h *UserHandler) signinByThirdparty(u *models.User, userCollection *mongo.C
 				CreatedAt:  time.Now().UTC(),
 				UpdatedAt:  time.Now().UTC(),
 			}
-			_, err = userCollection.InsertOne(context.Background(), data)
+			err := models.CreateAUser(db, data)
 			if err != nil {
-				// return internal gRPC error to be handled later
-				return nil, &echo.HTTPError{
-					Code:     http.StatusBadRequest,
-					Message:  "[Signin] Internal server error",
-					Internal: err,
-				}
+				return nil, err
 			}
-			return data, nil
-		}
-		h.Logger.Error("Error when sign in by third-party ", err)
-		return nil, &echo.HTTPError{
-			Code:     http.StatusBadRequest,
-			Message:  "[Signin] Internal server error",
-			Internal: err,
-		}
-	}
-
-	if data.Role != u.Role {
-		return nil, &echo.HTTPError{
-			Code:    http.StatusBadRequest,
-			Message: "Invalid role",
-		}
-	}
-
-	if data.IsDeleted {
-		return nil, &echo.HTTPError{
-			Code:    http.StatusGone,
-			Message: "User has been deleted.",
+		} else {
+			return nil, err
 		}
 	}
 
@@ -160,27 +119,22 @@ func (h *UserHandler) Signin(c echo.Context) (err error) {
 		}
 	}
 
-	userCollection := models.GetUserCollection(h.DB)
 	user := &models.User{}
 	switch u.Service {
 	case "EMAIL":
-		if user, err = h.signinByEmail(*u, userCollection); err != nil {
+		if user, err = h.signinByEmail(*u, h.DB); err != nil {
 			return err
 		}
 	case "GOOGLE":
-		if user, err = h.signinByThirdparty(u, userCollection); err != nil {
+		if user, err = h.signinByThirdparty(u, h.DB); err != nil {
 			return err
 		}
 	case "FACEBOOK":
-		if user, err = h.signinByThirdparty(u, userCollection); err != nil {
+		if user, err = h.signinByThirdparty(u, h.DB); err != nil {
 			return err
 		}
 	default:
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: "Invalid services method."}
-	}
-
-	if err != nil {
-		return err
 	}
 
 	// Generate encoded token and send it as response

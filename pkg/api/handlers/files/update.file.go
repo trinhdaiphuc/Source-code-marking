@@ -9,7 +9,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -29,54 +28,22 @@ func (h *FileHandler) UpdateFile(c echo.Context) (err error) {
 	claims := userToken.Claims.(jwt.MapClaims)
 	userID := claims["id"].(string)
 
-	ctx := context.Background()
-	fileCollection := models.GetFileCollection(h.DB)
-	resultFind := fileCollection.FindOne(ctx, bson.M{"_id": fileID, "is_deleted": false})
-
-	data := models.File{}
-	if err := resultFind.Decode(&data); err != nil {
-		h.Logger.Debug("Error when sign in by email ", err)
-		if err == mongo.ErrNoDocuments {
-			return &echo.HTTPError{
-				Code:     http.StatusBadRequest,
-				Message:  "Not found file",
-				Internal: err,
-			}
-		}
-		return &echo.HTTPError{
-			Code:     http.StatusInternalServerError,
-			Message:  "[UpdateFile] Internal server error",
-			Internal: err,
-		}
+	fileItem, err := models.GetAFile(h.DB, bson.M{"_id": fileID, "is_deleted": false})
+	if err != nil {
+		return err
 	}
 
-	if userID != data.UserID {
+	if userID != fileItem.UserID {
 		return &echo.HTTPError{
 			Code:    http.StatusForbidden,
 			Message: "User cannot update this file.",
 		}
 	}
 
-	exerciseCollection := models.GetExerciseCollection(h.DB)
-	resultFind = exerciseCollection.FindOne(context.Background(), bson.M{"_id": data.ExerciseID})
-
-	exercise := &models.Exercise{}
-	if err := resultFind.Decode(&exercise); err != nil {
-		if err == mongo.ErrNoDocuments {
-			return &echo.HTTPError{
-				Code:     http.StatusNotFound,
-				Message:  "Not found Exercise",
-				Internal: err,
-			}
-		}
-		return &echo.HTTPError{
-			Code:     http.StatusInternalServerError,
-			Message:  "[GetExercise] Internal server error",
-			Internal: err,
-		}
+	exercise, err := models.GetAExercise(h.DB, bson.M{"_id": fileItem.ExerciseID})
+	if err != nil {
+		return err
 	}
-
-	h.Logger.Debug("Time deadline ", exercise.Deadline.Sub(time.Now()))
 
 	if exercise.Deadline.Sub(time.Now()) < 0 {
 		return &echo.HTTPError{
@@ -92,10 +59,10 @@ func (h *FileHandler) UpdateFile(c echo.Context) (err error) {
 			"updated_at": time.Now().UTC(),
 		},
 	}
-	filter := bson.M{"_id": fileID}
-
-	resultUpdate := fileCollection.FindOneAndUpdate(ctx, filter, update, options.FindOneAndUpdate().SetReturnDocument(1))
-	err = resultUpdate.Decode(&data)
+	filter := bson.M{"_id": fileID, "is_deleted": false}
+	fileCollection := models.GetFileCollection(h.DB)
+	resultUpdate := fileCollection.FindOneAndUpdate(context.TODO(), filter, update, options.FindOneAndUpdate().SetReturnDocument(1))
+	err = resultUpdate.Decode(&fileItem)
 	if err != nil {
 		return &echo.HTTPError{
 			Code:     http.StatusInternalServerError,
@@ -104,5 +71,5 @@ func (h *FileHandler) UpdateFile(c echo.Context) (err error) {
 		}
 	}
 
-	return c.JSON(http.StatusOK, data)
+	return c.JSON(http.StatusOK, fileItem)
 }

@@ -2,7 +2,6 @@ package classes
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/dgrijalva/jwt-go"
@@ -32,7 +31,6 @@ func (h *ClassHandler) ListClassUsers(c echo.Context) (err error) {
 	}
 
 	classID := c.Param("id")
-	h.Logger.Debug(fmt.Sprintf("List query parameters: %v", listParam))
 	limit := listParam.PageSize
 	page := listParam.PageToken
 	skip := (page - 1) * limit

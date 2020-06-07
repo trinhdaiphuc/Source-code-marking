@@ -2,8 +2,10 @@ package models
 
 import (
 	"context"
+	"net/http"
 	"time"
 
+	"github.com/labstack/echo/v4"
 	uuid "github.com/satori/go.uuid"
 	"github.com/trinhdaiphuc/Source-code-marking/internal"
 	"go.mongodb.org/mongo-driver/bson"
@@ -50,7 +52,7 @@ func newUserCollection(db *mongo.Client) {
 		// create UniqueIndex option
 		Options: options.Index().SetUnique(true),
 	}
-	ctx := context.Background()
+	ctx := context.TODO()
 	userCollection := getDatabase(db).Collection("users")
 	userCollection.Indexes().CreateOne(ctx, mod)
 	password, _ := internal.HashPassword("123456")
@@ -83,4 +85,44 @@ func ConvertUserArrayToListUser(users []User, nextPageToken, totalRecords int64)
 		listUser.Users[i].Password = ""
 	}
 	return listUser
+}
+
+func GetAUser(db *mongo.Client, filter bson.M, userRole string) (*User, error) {
+	userCollection := GetUserCollection(db)
+	resultFind := userCollection.FindOne(context.TODO(), filter)
+
+	data := &User{}
+	if err := resultFind.Decode(&data); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, &echo.HTTPError{
+				Code:     http.StatusNotFound,
+				Message:  "Not found user ",
+				Internal: err,
+			}
+		}
+		return nil, &echo.HTTPError{
+			Code:     http.StatusInternalServerError,
+			Message:  "Internal server error",
+			Internal: err,
+		}
+	}
+
+	if userRole != "ADMIN" && data.IsDeleted {
+		return nil, echo.NewHTTPError(http.StatusGone, "User has been deleted")
+	}
+
+	return data, nil
+}
+
+func CreateAUser(db *mongo.Client, data *User) error {
+	userCollection := GetUserCollection(db)
+	_, err := userCollection.InsertOne(context.TODO(), data)
+	if err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusBadRequest,
+			Message:  "Internal server error",
+			Internal: err,
+		}
+	}
+	return nil
 }

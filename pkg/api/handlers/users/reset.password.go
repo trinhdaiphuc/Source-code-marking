@@ -14,6 +14,7 @@ import (
 )
 
 func (h *UserHandler) ResetPassword(c echo.Context) (err error) {
+	h.Logger.Debug("Reset password handler")
 	password := &models.ResetPassword{}
 	if err := c.Bind(password); err != nil {
 		return &echo.HTTPError{
@@ -37,9 +38,10 @@ func (h *UserHandler) ResetPassword(c echo.Context) (err error) {
 	userID := claims["id"].(string)
 
 	h.Logger.Debug("Password: ", password.Password)
-	filter := bson.M{"_id": userID}
-	ctx := context.Background()
+	filter := bson.M{"_id": userID, "is_deleted": false}
+	ctx := context.TODO()
 	hashPassword, err := internal.HashPassword(password.Password)
+
 	if err != nil {
 		return &echo.HTTPError{
 			Code:     http.StatusInternalServerError,
@@ -47,6 +49,7 @@ func (h *UserHandler) ResetPassword(c echo.Context) (err error) {
 			Internal: err,
 		}
 	}
+
 	update := bson.M{
 		"$set": bson.M{
 			"password": hashPassword,

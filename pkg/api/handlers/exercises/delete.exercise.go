@@ -17,46 +17,19 @@ func (h *ExerciseHandler) DeleteExercise(c echo.Context) (err error) {
 	exerciseID := c.Param("id")
 
 	ctx := context.Background()
-	exerciseCollection := models.GetExerciseCollection(h.DB)
-	result := exerciseCollection.FindOne(ctx, bson.M{"_id": exerciseID})
 
-	exerciseItem := &models.Exercise{}
-
-	if err = result.Decode(&exerciseItem); err != nil {
-		if err == mongo.ErrNoDocuments {
-			return &echo.HTTPError{
-				Code:     http.StatusNotFound,
-				Message:  "Not found exercise",
-				Internal: err,
-			}
-		}
-		return &echo.HTTPError{
-			Code:     http.StatusInternalServerError,
-			Message:  "[Delete exercise] Internal server error",
-			Internal: err,
-		}
+	exerciseItem, err := models.GetAExercise(h.DB, bson.M{"_id": exerciseID})
+	if err != nil {
+		return err
 	}
 
-	classItem := &models.Class{}
 	userToken := c.Get("user").(*jwt.Token)
 	claims := userToken.Claims.(jwt.MapClaims)
 	userID := claims["id"].(string)
-	classCollection := models.GetClassCollection(h.DB)
-	result = classCollection.FindOne(ctx, bson.M{"_id": exerciseItem.ClassID, "teachers._id": userID})
+	_, err = models.GetAClass(h.DB, bson.M{"_id": exerciseItem.ClassID, "teachers._id": userID})
 
-	if err = result.Decode(&classItem); err != nil {
-		if err == mongo.ErrNoDocuments {
-			return &echo.HTTPError{
-				Code:     http.StatusNotFound,
-				Message:  "Not found class with teacher id",
-				Internal: err,
-			}
-		}
-		return &echo.HTTPError{
-			Code:     http.StatusInternalServerError,
-			Message:  "[Delete exercise] Internal server error",
-			Internal: err,
-		}
+	if err != nil {
+		return err
 	}
 
 	update := bson.M{
@@ -67,8 +40,8 @@ func (h *ExerciseHandler) DeleteExercise(c echo.Context) (err error) {
 	}
 
 	exercise := &models.Exercise{}
-
-	result = exerciseCollection.FindOneAndUpdate(ctx, bson.M{"_id": exerciseID}, update, options.FindOneAndUpdate().SetReturnDocument(1))
+	exerciseCollection := models.GetExerciseCollection(h.DB)
+	result := exerciseCollection.FindOneAndUpdate(ctx, bson.M{"_id": exerciseID}, update, options.FindOneAndUpdate().SetReturnDocument(1))
 	if err = result.Decode(&exercise); err != nil {
 		if err == mongo.ErrNoDocuments {
 			return &echo.HTTPError{
