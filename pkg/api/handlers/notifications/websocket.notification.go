@@ -18,7 +18,7 @@ import (
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		if os.Getenv("ENV") == "production" {
-			if r.Header.Get("Origin") == os.Getenv("FRONT_END_WEBSOCKET_HOST") {
+			if r.Header.Get("Origin") == os.Getenv("FRONT_END_SERVER_HOST") {
 				return true
 			}
 			return false
@@ -88,9 +88,7 @@ func (h *NotificationHandler) WebsocketNotification(c echo.Context) (err error) 
 		}
 	}
 
-	if h.WebsocketClients[ws] == "" {
-		h.WebsocketClients[ws] = claims.Email
-	}
+	h.WebsocketClients[ws] = claims.Email
 
 	ctx := context.Background()
 	h.Logger.Debug("Connect to websocket user: ", claims.Email)
@@ -117,6 +115,8 @@ func (h *NotificationHandler) WebsocketNotification(c echo.Context) (err error) 
 	firstMsg := &WebsocketMessage{
 		Notifications: string(data),
 	}
+
+	h.Logger.Debug("Message send ", firstMsg)
 
 	err = ws.WriteJSON(firstMsg)
 	if err != nil {
@@ -145,9 +145,9 @@ func (h *NotificationHandler) WebsocketNotification(c echo.Context) (err error) 
 			writeMsg.Notifications = msgRedis.Payload
 			err = ws.WriteJSON(writeMsg)
 			if err != nil {
-				h.Logger.Error(err)
+				h.Logger.Error("Error write socket fail ", err)
 				delete(h.WebsocketClients, ws)
-				return
+				break
 			}
 		}
 	}

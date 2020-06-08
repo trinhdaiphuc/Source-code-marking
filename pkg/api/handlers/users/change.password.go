@@ -41,6 +41,10 @@ func (h *UserHandler) ChangePassword(c echo.Context) (err error) {
 		return err
 	}
 
+	if user.Password == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Not have password")
+	}
+
 	if ok := internal.CheckPasswordHash(password.OldPassword, user.Password); !ok {
 		return &echo.HTTPError{
 			Code:    http.StatusBadRequest,

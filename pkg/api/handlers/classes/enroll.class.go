@@ -24,6 +24,22 @@ func (h *ClassHandler) EnrollClass(c echo.Context) (err error) {
 		return err
 	}
 
+	class, err := models.GetAClass(h.DB, bson.M{"_id": classID, "students._id": userID})
+
+	if err != nil {
+		code := http.StatusInternalServerError
+		if he, ok := err.(*echo.HTTPError); ok {
+			code = he.Code
+		}
+		if code == http.StatusInternalServerError {
+			return err
+		}
+	}
+
+	if class != nil && class.ID != "" {
+		return echo.NewHTTPError(http.StatusConflict, "You already enroll")
+	}
+
 	user.Password = ""
 
 	filter := bson.M{"_id": classID, "is_deleted": false}
