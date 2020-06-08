@@ -55,6 +55,10 @@ func (h *UserHandler) ForgetPassword(c echo.Context) (err error) {
 		}
 	}
 
+	if user.Password == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Wrong service")
+	}
+
 	go sendResetPasswordEmail(*user, h.JWTKey, h.Logger)
 	return c.NoContent(http.StatusNoContent)
 }
