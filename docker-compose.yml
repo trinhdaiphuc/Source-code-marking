@@ -1,8 +1,9 @@
 version: "3"
 services:
-  source-code-marking:
+  back_end:
     build:
       context: .
+      dockerfile: Dockerfile
     env_file: .env
     restart: always
     depends_on: 
@@ -47,6 +48,9 @@ services:
       - "6378:6379"
     environment:
       - REDIS_REPLICATION_MODE=master
-
+  
+  front_end:
+    image: nginx:alpine
+    command: git -C /build clone https://github.com/1653014/SourceCodeMarking_React.git
 volumes:
   mongo:
