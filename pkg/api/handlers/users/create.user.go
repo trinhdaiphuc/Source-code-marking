@@ -43,12 +43,14 @@ func (h *UserHandler) CreateUser(c echo.Context) (err error) {
 	// Check email had created or not.
 	user, err := models.GetAUser(h.DB, bson.M{"email": u.Email}, u.Role)
 
-	code := http.StatusInternalServerError
-	if he, ok := err.(*echo.HTTPError); ok {
-		code = he.Code
-	}
-	if code == http.StatusInternalServerError {
-		return err
+	if err != nil {
+		code := http.StatusInternalServerError
+		if he, ok := err.(*echo.HTTPError); ok {
+			code = he.Code
+		}
+		if code == http.StatusInternalServerError {
+			return err
+		}
 	}
 
 	if user.Email != "" {

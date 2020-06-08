@@ -53,12 +53,14 @@ func (h *FileHandler) CreateFile(c echo.Context) (err error) {
 
 	filter = bson.M{"user_id": userID, "exercise_id": fileItem.ExerciseID}
 	data, err := models.GetAFile(h.DB, filter)
-	code := http.StatusInternalServerError
-	if he, ok := err.(*echo.HTTPError); ok {
-		code = he.Code
-	}
-	if code != http.StatusNotFound {
-		return err
+	if err != nil {
+		code := http.StatusInternalServerError
+		if he, ok := err.(*echo.HTTPError); ok {
+			code = he.Code
+		}
+		if code != http.StatusNotFound {
+			return err
+		}
 	}
 
 	if data.ID != "" {
