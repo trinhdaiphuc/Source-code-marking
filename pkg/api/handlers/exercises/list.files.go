@@ -9,6 +9,7 @@ import (
 	"github.com/trinhdaiphuc/Source-code-marking/internal"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -49,7 +50,7 @@ func (h *ExerciseHandler) ListFiles(c echo.Context) (err error) {
 	}
 
 	opts := []*options.FindOptions{}
-	opts = append(opts, options.Find().SetSort(bson.D{{orderBy, orderType}}))
+	opts = append(opts, options.Find().SetSort(bson.D{primitive.E{Key: orderBy, Value: orderType}}))
 	opts = append(opts, options.Find().SetSkip(skip))
 	opts = append(opts, options.Find().SetLimit(limit))
 

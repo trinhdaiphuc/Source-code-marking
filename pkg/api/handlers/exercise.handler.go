@@ -35,3 +35,7 @@ func (h *Handler) DeleteExercise(c echo.Context) (err error) {
 func (h *Handler) ListFiles(c echo.Context) (err error) {
 	return h.ExerciseHandler.ListFiles(c)
 }
+
+func (h *Handler) ExerciseStatistic(c echo.Context) (err error) {
+	return h.ExerciseHandler.ExerciseStatistic(c)
+}

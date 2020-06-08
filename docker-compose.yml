@@ -13,8 +13,9 @@ services:
       - ${PORT}
     environment:
       DB_HOST: "mongodb://mongo:27017"
-      REDIS_HOST: "redis"
-      REDIS_PORT: "6379"
+      REDIS_HOST: "redis:6379"
+      REDIS_DB: 0
+      REDIS_PASSWORD: password
 
   mongo:
     image: "mongo:4.2.1"
@@ -35,10 +36,17 @@ services:
       - source-code-marking
     ports:
       - "4000:4000"
+
   redis:
     image: "redis:alpine"
+    command: redis-server --requirepass password
+    volumes:
+      - ./tmp/redis-data:/var/lib/redis
+      - ./tmp/redis.conf:/usr/local/etc/redis/redis.conf
     ports: 
       - "6378:6379"
+    environment:
+      - REDIS_REPLICATION_MODE=master
 
 volumes:
   mongo:

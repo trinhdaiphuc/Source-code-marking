@@ -47,6 +47,7 @@ type (
 		ForgetPassword(c echo.Context) (err error)
 		ResetPassword(c echo.Context) (err error)
 		ChangePassword(c echo.Context) (err error)
+		UserStatistic(c echo.Context) (err error)
 	}
 
 	// ClassInterface is a interface for handle all class logic
@@ -60,6 +61,7 @@ type (
 		UnenrollClass(c echo.Context) (err error)
 		ListExercises(c echo.Context) (err error)
 		ListClassUsers(c echo.Context) (err error)
+		ClassStatistic(c echo.Context) (err error)
 	}
 
 	// ExercisesInterface is a interface for handle all class logic
@@ -70,6 +72,7 @@ type (
 		GetAllExercises(c echo.Context) (err error)
 		DeleteExercise(c echo.Context) (err error)
 		ListFiles(c echo.Context) (err error)
+		ExerciseStatistic(c echo.Context) (err error)
 	}
 
 	// FileInterface is a interface for handle all file logic
@@ -81,6 +84,7 @@ type (
 		GetAllFiles(c echo.Context) (err error)
 		DeleteFile(c echo.Context) (err error)
 		ListComments(c echo.Context) (err error)
+		FileStatistic(c echo.Context) (err error)
 	}
 
 	// CommentInterface is a interface for handle all comment logic

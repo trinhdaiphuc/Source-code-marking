@@ -40,3 +40,7 @@ func (h *Handler) DeleteFile(c echo.Context) (err error) {
 func (h *Handler) ListComments(c echo.Context) (err error) {
 	return h.FileHandler.ListComments(c)
 }
+
+func (h *Handler) FileStatistic(c echo.Context) (err error) {
+	return h.FileHandler.FileStatistic(c)
+}

@@ -17,6 +17,12 @@ type (
 		PageSize    int64  `query:"page_size" validate:"gte=10,lte=50"`
 	}
 
+	StatisticQueryParam struct {
+		BeginDate string `query:"begin_date"`
+		EndDate   string `query:"end_date"`
+		UserRole  string `query:"user_role"`
+	}
+
 	TotalRecords struct {
 		ID    string `json:"id,omitempty" bson:"_id"`
 		Total int64  `json:"total" bson:"total"`

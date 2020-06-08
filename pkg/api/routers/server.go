@@ -36,6 +36,7 @@ func users(e *echo.Echo, h *handlers.Handler) {
 	e.PUT("/api/v1/users/:id", h.UpdateUser)
 	e.DELETE("/api/v1/users/:id", h.DeleteUser, middlewares.IsAdmin)
 	e.GET("/api/v1/users/:id/classes", h.ListClasses)
+	e.GET("/api/v1/users/statistic", h.UserStatistic, middlewares.IsAdmin)
 }
 
 func classes(e *echo.Echo, h *handlers.Handler) {
@@ -48,6 +49,7 @@ func classes(e *echo.Echo, h *handlers.Handler) {
 	e.PUT("/api/v1/classes/:id/enroll", h.UnnrollClass, middlewares.IsStudent)
 	e.GET("/api/v1/classes/:id/exercises", h.ListExercises)
 	e.GET("/api/v1/classes/:id/users", h.ListClassUsers, middlewares.IsTeacherOrStudent)
+	e.GET("/api/v1/classes/statistic", h.ClassStatistic, middlewares.IsAdmin)
 }
 
 func exercises(e *echo.Echo, h *handlers.Handler) {
@@ -57,6 +59,7 @@ func exercises(e *echo.Echo, h *handlers.Handler) {
 	e.PUT("/api/v1/exercises/:id", h.UpdateExercise, middlewares.IsAdminOrTeacher)
 	e.DELETE("/api/v1/exercises/:id", h.DeleteExercise, middlewares.IsAdminOrTeacher)
 	e.GET("/api/v1/exercises/:id/files", h.ListFiles)
+	e.GET("/api/v1/exercises/statistic", h.ExerciseStatistic, middlewares.IsAdmin)
 }
 
 func files(e *echo.Echo, h *handlers.Handler) {
@@ -67,6 +70,7 @@ func files(e *echo.Echo, h *handlers.Handler) {
 	e.PATCH("/api/v1/files/:id", h.MarkFile, middlewares.IsTeacher)
 	e.DELETE("/api/v1/files/:id", h.DeleteFile, middlewares.IsAdminOrStudent)
 	e.GET("/api/v1/files/:id/comments", h.ListComments)
+	e.GET("/api/v1/files/statistic", h.FileStatistic, middlewares.IsAdmin)
 }
 
 func comments(e *echo.Echo, h *handlers.Handler) {
