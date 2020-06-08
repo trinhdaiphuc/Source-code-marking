@@ -7,9 +7,40 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
+	"github.com/trinhdaiphuc/Source-code-marking/internal"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
+
+func updateClassWithUser(db *mongo.Client, logger *internal.AppLog, userID, userRole, userName string) {
+	classCollection := models.GetClassCollection(db)
+	filter := bson.M{}
+	update := bson.M{}
+	switch userRole {
+	case "TEACHER":
+		filter["teachers._id"] = userID
+		update = bson.M{
+			"$set": bson.M{
+				"teachers.$.name": userName,
+			},
+		}
+	case "STUDENT":
+		filter["students._id"] = userID
+		update = bson.M{
+			"$set": bson.M{
+				"students.$.name": userName,
+			},
+		}
+	default:
+		filter["_id"] = "12"
+	}
+
+	_, err := classCollection.UpdateMany(context.TODO(), filter, update)
+	if err != nil {
+		logger.Error("Error when update user in class ", err)
+	}
+}
 
 func (h *UserHandler) UpdateUser(c echo.Context) (err error) {
 	h.Logger.Info("Sign-up handler")
@@ -65,5 +96,6 @@ func (h *UserHandler) UpdateUser(c echo.Context) (err error) {
 
 	c.Response().Header().Set("Access-Token", tokenString)
 	data.Password = ""
+	go updateClassWithUser(h.DB, h.Logger, userID, userRole, u.Name)
 	return c.JSON(http.StatusOK, data)
 }
