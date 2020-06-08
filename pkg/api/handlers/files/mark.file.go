@@ -63,7 +63,8 @@ func publishMarkingNotification(
 		return
 	}
 
-	totalUnread, err := notificationCollection.CountDocuments(context.TODO(), bson.M{"is_read": false})
+	filter["is_read"] = false
+	totalUnread, err := notificationCollection.CountDocuments(context.TODO(), filter)
 	listNotificationWebsocket := models.ListNotificationWebsocket{
 		Notifications: listNotification.Notifications,
 		TotalUnread:   totalUnread,
