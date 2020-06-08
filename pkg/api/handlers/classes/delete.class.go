@@ -16,6 +16,7 @@ func (h *ClassHandler) DeleteClass(c echo.Context) (err error) {
 	claims := userToken.Claims.(jwt.MapClaims)
 	userID := claims["id"].(string)
 	classID := c.Param("id")
+	userRole := claims["role"].(string)
 
 	classCollection := models.GetClassCollection(h.DB)
 	update := bson.M{
@@ -25,7 +26,11 @@ func (h *ClassHandler) DeleteClass(c echo.Context) (err error) {
 		},
 	}
 
-	filter := bson.M{"_id": classID, "teachers._id": userID}
+	filter := bson.M{"_id": classID}
+	if userRole != "ADMIN" {
+		filter["teachers._id"] = userID
+	}
+
 	_, err = classCollection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		return &echo.HTTPError{

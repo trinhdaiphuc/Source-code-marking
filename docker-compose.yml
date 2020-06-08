@@ -1,4 +1,5 @@
 version: "3"
+
 services:
   back_end:
     build:
@@ -23,9 +24,9 @@ services:
     image: mongo:4.2.1
     container_name: mongo
     volumes:
-      - "mongo:/data/db"
+      - mongo:/data/db
     ports:
-      - "27100:27017"
+      - 27100:27017
 
   redis:
     image: redis:alpine
@@ -34,22 +35,20 @@ services:
       - ./tmp/redis-data:/var/lib/redis
       - ./tmp/redis.conf:/usr/local/etc/redis/redis.conf
     ports:
-      - "6378:6379"
+      - 6378:6379
     environment:
       REDIS_REPLICATION_MODE: master
 
-  front_end:
-    container_name: source-code-marking-frontend
+  nginx:
     build:
-      context: .
-      dockerfile: Dockerfile.frontend
-    depends_on: 
-      - back_end
+      context: ./deployments
+      dockerfile: Dockerfile
     volumes:
       - ./deployments/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - back_end
     ports:
-      - "3000:3000"
-      - "4000:4000"
+      - 4000:4000
 
 volumes:
   mongo:
