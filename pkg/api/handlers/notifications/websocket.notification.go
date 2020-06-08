@@ -118,6 +118,8 @@ func (h *NotificationHandler) WebsocketNotification(c echo.Context) (err error) 
 		Notifications: string(data),
 	}
 
+	h.Logger.Debug("Message send ", firstMsg)
+
 	err = ws.WriteJSON(firstMsg)
 	if err != nil {
 		h.Logger.Error(err)
