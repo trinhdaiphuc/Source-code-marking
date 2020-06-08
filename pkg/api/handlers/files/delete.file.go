@@ -16,6 +16,8 @@ func (h *FileHandler) DeleteFile(c echo.Context) (err error) {
 	claims := userToken.Claims.(jwt.MapClaims)
 	userID := claims["id"].(string)
 	fileID := c.Param("id")
+	userRole := claims["role"].(string)
+
 	ctx := context.Background()
 
 	fileItem, err := models.GetAFile(h.DB, bson.M{"_id": fileID, "is_deleted": false})
@@ -37,8 +39,20 @@ func (h *FileHandler) DeleteFile(c echo.Context) (err error) {
 		}
 	}
 
+	update := bson.M{
+		"$set": bson.M{
+			"is_deleted": true,
+			"updated_at": time.Now().UTC(),
+		},
+	}
+
+	filter = bson.M{"_id": fileID}
+	if userRole != "ADMIN" {
+		filter["user_id"] = userID
+	}
+
 	fileCollection := models.GetFileCollection(h.DB)
-	_, err = fileCollection.DeleteOne(ctx, bson.M{"_id": fileID, "user_id": userID})
+	_, err = fileCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return &echo.HTTPError{
 			Code:     http.StatusInternalServerError,
