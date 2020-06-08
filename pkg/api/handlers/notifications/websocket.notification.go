@@ -18,7 +18,7 @@ import (
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		if os.Getenv("ENV") == "production" {
-			if r.Header.Get("Origin") == os.Getenv("FRONT_END_WEBSOCKET_HOST") {
+			if r.Header.Get("Origin") == os.Getenv("FRONT_END_SERVER_HOST") {
 				return true
 			}
 			return false
