@@ -59,13 +59,6 @@ func (h *UserHandler) signinByThirdparty(u *models.User, db *mongo.Client) (*mod
 		}
 	}
 
-	if !(u.Role == "STUDENT" || u.Role == "TEACHER") {
-		return nil, &echo.HTTPError{
-			Code:    http.StatusBadRequest,
-			Message: "Invalid arguments: role",
-		}
-	}
-
 	data, err := models.GetAUser(db, bson.M{"email": u.Email}, u.Role)
 	if err != nil {
 		code := http.StatusInternalServerError
@@ -74,6 +67,13 @@ func (h *UserHandler) signinByThirdparty(u *models.User, db *mongo.Client) (*mod
 		}
 
 		if code == http.StatusNotFound {
+			if !(u.Role == "STUDENT" || u.Role == "TEACHER") {
+				return nil, &echo.HTTPError{
+					Code:    http.StatusBadRequest,
+					Message: "Invalid arguments: role",
+				}
+			}
+
 			data = &models.User{
 				ID:         uuid.NewV4().String(),
 				Email:      u.Email,

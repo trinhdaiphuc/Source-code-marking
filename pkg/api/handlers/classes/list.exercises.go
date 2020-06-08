@@ -10,6 +10,7 @@ import (
 	"github.com/trinhdaiphuc/Source-code-marking/internal"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -50,18 +51,25 @@ func (h *ClassHandler) ListExercises(c echo.Context) (err error) {
 	if listParam.OrderBy != "" {
 		orderBy = listParam.OrderBy
 	}
-
-	opts := []*options.FindOptions{}
-	opts = append(opts, options.Find().SetSort(bson.D{{orderBy, orderType}}))
-	opts = append(opts, options.Find().SetSkip(skip))
-	opts = append(opts, options.Find().SetLimit(limit))
-
-	filter := bson.M{"class_id": classID}
-
 	userToken := c.Get("user").(*jwt.Token)
 	claims := userToken.Claims.(jwt.MapClaims)
 	userRole := claims["role"].(string)
 
+	filter := bson.M{"_id": classID, "is_deleted": false}
+	if userRole != "ADMIN" {
+		filter["is_deleted"] = false
+	}
+	_, err = models.GetAClass(h.DB, filter)
+	if err != nil {
+		return err
+	}
+
+	opts := []*options.FindOptions{}
+	opts = append(opts, options.Find().SetSort(bson.D{primitive.E{Key: orderBy, Value: orderType}}))
+	opts = append(opts, options.Find().SetSkip(skip))
+	opts = append(opts, options.Find().SetLimit(limit))
+
+	filter = bson.M{"class_id": classID}
 	if userRole != "ADMIN" {
 		filter["is_deleted"] = false
 	}

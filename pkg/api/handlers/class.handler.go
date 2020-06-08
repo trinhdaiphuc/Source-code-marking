@@ -49,3 +49,7 @@ func (h *Handler) ListExercises(c echo.Context) (err error) {
 func (h *Handler) ListClassUsers(c echo.Context) (err error) {
 	return h.ClassHandler.ListClassUsers(c)
 }
+
+func (h *Handler) ClassStatistic(c echo.Context) (err error) {
+	return h.ClassHandler.ClassStatistic(c)
+}
