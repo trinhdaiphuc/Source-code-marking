@@ -41,6 +41,11 @@ type (
 	ResetPassword struct {
 		Password string `json:"password" validate:"required,min=6"`
 	}
+
+	ListUserStatistic struct {
+		ID    string `json:"date" bson:"_id, omitempty"`
+		Total int64  `json:"total" bson:"total"`
+	}
 )
 
 func newUserCollection(db *mongo.Client) {

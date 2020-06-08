@@ -8,6 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -53,14 +54,14 @@ func (h *ClassHandler) ListClassUsers(c echo.Context) (err error) {
 	switch listParam.FilterValue {
 	case "STUDENT":
 		opts = append(opts, options.Find().SetProjection(bson.D{
-			{"students", bson.D{
-				{"$slice", []interface{}{skip, limit}},
+			primitive.E{Key: "students", Value: bson.D{
+				primitive.E{Key: "$slice", Value: []interface{}{skip, limit}},
 			}},
 		}))
 	case "TEACHER":
 		opts = append(opts, options.Find().SetProjection(bson.D{
-			{"teachers", bson.D{
-				{"$slice", []interface{}{skip, limit}},
+			primitive.E{Key: "teachers", Value: bson.D{
+				primitive.E{Key: "$slice", Value: []interface{}{skip, limit}},
 			}},
 		}))
 	}

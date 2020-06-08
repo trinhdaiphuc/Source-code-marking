@@ -66,3 +66,7 @@ func (h *Handler) ResetPassword(c echo.Context) (err error) {
 func (h *Handler) ChangePassword(c echo.Context) (err error) {
 	return h.UserHandler.ChangePassword(c)
 }
+
+func (h *Handler) UserStatistic(c echo.Context) (err error) {
+	return h.UserHandler.UserStatistic(c)
+}

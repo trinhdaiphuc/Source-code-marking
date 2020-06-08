@@ -1,44 +1,56 @@
 version: "3"
 services:
-  source-code-marking:
+  back_end:
+    container_name: source-code-marking-backend
     build:
       context: .
+      dockerfile: Dockerfile
     env_file: .env
     restart: always
-    depends_on: 
+    depends_on:
       - mongo
     volumes:
       - .:/app/src
     expose:
       - ${PORT}
     environment:
-      DB_HOST: "mongodb://mongo:27017"
-      REDIS_HOST: "redis"
-      REDIS_PORT: "6379"
+      DB_HOST: mongodb://mongo:27017
+      DB_NAME: Source-code-marking
+      REDIS_HOST: redis:6379
+      REDIS_DB: 0
+      REDIS_PASSWORD: password
 
   mongo:
-    image: "mongo:4.2.1"
-    container_name: "mongo"
+    image: mongo:4.2.1
+    container_name: mongo
     volumes:
       - "mongo:/data/db"
     ports:
       - "27100:27017"
 
-  nginx:
-    image: nginx:alpine
+  redis:
+    image: redis:alpine
+    command: redis-server --requirepass password
+    volumes:
+      - ./tmp/redis-data:/var/lib/redis
+      - ./tmp/redis.conf:/usr/local/etc/redis/redis.conf
+    ports:
+      - "6378:6379"
+    environment:
+      REDIS_REPLICATION_MODE: master
+
+  front_end:
+    container_name: source-code-marking-frontend
     build:
-      context: ./deployments
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Dockerfile.frontend
+    depends_on: 
+      - back_end
     volumes:
       - ./deployments/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - source-code-marking
     ports:
+      - "3000:3000"
       - "4000:4000"
-  redis:
-    image: "redis:alpine"
-    ports: 
-      - "6378:6379"
 
 volumes:
   mongo:

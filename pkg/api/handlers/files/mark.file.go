@@ -63,7 +63,13 @@ func publishMarkingNotification(
 		return
 	}
 
-	message, _ := json.Marshal(listNotification.Notifications)
+	filter["is_read"] = false
+	totalUnread, err := notificationCollection.CountDocuments(context.TODO(), filter)
+	listNotificationWebsocket := models.ListNotificationWebsocket{
+		Notifications: listNotification.Notifications,
+		TotalUnread:   totalUnread,
+	}
+	message, _ := json.Marshal(listNotificationWebsocket)
 	err = redisClient.Publish(ctx, user.Email, message).Err()
 
 	logger.Debug("User Email ", user.Email)

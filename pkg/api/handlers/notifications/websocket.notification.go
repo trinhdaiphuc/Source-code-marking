@@ -18,7 +18,7 @@ import (
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		if os.Getenv("ENV") == "production" {
-			if r.Header.Get("Origin") == os.Getenv("FRONT_END_SERVER_HOST") {
+			if r.Header.Get("Origin") == os.Getenv("FRONT_END_WEBSOCKET_HOST") {
 				return true
 			}
 			return false
@@ -36,9 +36,8 @@ type Claims struct {
 
 // Define our message object
 type WebsocketMessage struct {
-	Jwt            string `json:"jwt,omitempty"`
-	NotificationID string `json:"notification_id,omitempty"`
-	Notifications  string `json:"notifications,omitempty"`
+	Jwt           string `json:"jwt,omitempty"`
+	Notifications string `json:"notifications,omitempty"`
 }
 
 func (h *NotificationHandler) WebsocketNotification(c echo.Context) (err error) {
@@ -94,7 +93,7 @@ func (h *NotificationHandler) WebsocketNotification(c echo.Context) (err error) 
 	}
 
 	ctx := context.Background()
-	h.Logger.Info("Connect to websocket user: ", claims.Email)
+	h.Logger.Debug("Connect to websocket user: ", claims.Email)
 
 	filter := bson.M{"user_id": claims.ID, "is_deleted": false}
 
@@ -106,7 +105,14 @@ func (h *NotificationHandler) WebsocketNotification(c echo.Context) (err error) 
 	}
 
 	listNotification, err := models.ListAllNotifications(h.DB, filter, listParam)
-	data, _ := json.Marshal(listNotification.Notifications)
+	notificationCollection := models.GetNotificationCollection(h.DB)
+	filter["is_read"] = false
+	totalUnread, err := notificationCollection.CountDocuments(context.TODO(), filter)
+	listNotificationWebsocket := models.ListNotificationWebsocket{
+		Notifications: listNotification.Notifications,
+		TotalUnread:   totalUnread,
+	}
+	data, _ := json.Marshal(listNotificationWebsocket)
 
 	firstMsg := &WebsocketMessage{
 		Notifications: string(data),
