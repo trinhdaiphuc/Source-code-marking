@@ -88,9 +88,7 @@ func (h *NotificationHandler) WebsocketNotification(c echo.Context) (err error) 
 		}
 	}
 
-	if h.WebsocketClients[ws] == "" {
-		h.WebsocketClients[ws] = claims.Email
-	}
+	h.WebsocketClients[ws] = claims.Email
 
 	ctx := context.Background()
 	h.Logger.Debug("Connect to websocket user: ", claims.Email)
@@ -147,9 +145,9 @@ func (h *NotificationHandler) WebsocketNotification(c echo.Context) (err error) 
 			writeMsg.Notifications = msgRedis.Payload
 			err = ws.WriteJSON(writeMsg)
 			if err != nil {
-				h.Logger.Error(err)
+				h.Logger.Error("Error write socket fail ", err)
 				delete(h.WebsocketClients, ws)
-				return
+				break
 			}
 		}
 	}
