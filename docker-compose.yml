@@ -1,7 +1,6 @@
 version: "3"
 services:
   back_end:
-    container_name: source-code-marking-backend
     build:
       context: .
       dockerfile: Dockerfile
