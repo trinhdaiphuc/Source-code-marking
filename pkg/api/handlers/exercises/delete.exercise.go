@@ -26,7 +26,14 @@ func (h *ExerciseHandler) DeleteExercise(c echo.Context) (err error) {
 	userToken := c.Get("user").(*jwt.Token)
 	claims := userToken.Claims.(jwt.MapClaims)
 	userID := claims["id"].(string)
-	_, err = models.GetAClass(h.DB, bson.M{"_id": exerciseItem.ClassID, "teachers._id": userID})
+	userRole := claims["role"].(string)
+
+	filter := bson.M{"_id": exerciseItem.ClassID}
+	if userRole != "ADMIN" {
+		filter["teachers._id"] = userID
+	}
+
+	_, err = models.GetAClass(h.DB, filter)
 
 	if err != nil {
 		return err
