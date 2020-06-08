@@ -68,7 +68,7 @@ func (h *UserHandler) Signup(c echo.Context) (err error) {
 		}
 	}
 
-	if user.Email != "" {
+	if user != nil && user.Email != "" {
 		return echo.NewHTTPError(http.StatusConflict, "This email have already existed.")
 	}
 

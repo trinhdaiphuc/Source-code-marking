@@ -53,7 +53,7 @@ func (h *UserHandler) CreateUser(c echo.Context) (err error) {
 		}
 	}
 
-	if user.Email != "" {
+	if user != nil && user.Email != "" {
 		return &echo.HTTPError{
 			Code:    http.StatusConflict,
 			Message: "This email have already existed.",
