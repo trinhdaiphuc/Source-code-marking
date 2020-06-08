@@ -106,7 +106,8 @@ func (h *NotificationHandler) WebsocketNotification(c echo.Context) (err error) 
 
 	listNotification, err := models.ListAllNotifications(h.DB, filter, listParam)
 	notificationCollection := models.GetNotificationCollection(h.DB)
-	totalUnread, err := notificationCollection.CountDocuments(context.TODO(), bson.M{"is_read": false})
+	filter["is_read"] = false
+	totalUnread, err := notificationCollection.CountDocuments(context.TODO(), filter)
 	listNotificationWebsocket := models.ListNotificationWebsocket{
 		Notifications: listNotification.Notifications,
 		TotalUnread:   totalUnread,

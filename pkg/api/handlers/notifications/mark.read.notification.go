@@ -27,7 +27,8 @@ func sendNotification(db *mongo.Client, redisClient *redis.Client, userID, userE
 
 	listNotification, _ := models.ListAllNotifications(db, filter, listParam)
 	notificationCollection := models.GetNotificationCollection(db)
-	totalUnread, _ := notificationCollection.CountDocuments(context.TODO(), bson.M{"is_read": false})
+	filter["is_read"] = false
+	totalUnread, _ := notificationCollection.CountDocuments(context.TODO(), filter)
 	listNotificationWebsocket := models.ListNotificationWebsocket{
 		Notifications: listNotification.Notifications,
 		TotalUnread:   totalUnread,

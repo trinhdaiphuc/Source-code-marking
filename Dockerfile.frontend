@@ -3,3 +3,5 @@ FROM nginx:alpine
 RUN apk update && apk add --virtual build-dependencies build-base --no-cache git
 
 RUN git -C /app clone https://github.com/1653014/SourceCodeMarking_React.git
+
+WORKDIR /app
