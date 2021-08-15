@@ -5,19 +5,16 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
 	uuid "github.com/satori/go.uuid"
+	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/middlewares"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
 func (h *ClassHandler) CreateClass(c echo.Context) (err error) {
 	classItem := &models.Class{}
-	userToken := c.Get("user").(*jwt.Token)
-	claims := userToken.Claims.(jwt.MapClaims)
-	userID := claims["id"].(string)
-	userRole := claims["role"].(string)
+	userContext := middlewares.GetUser(c)
 
 	if err := c.Bind(classItem); err != nil {
 		return &echo.HTTPError{
@@ -35,8 +32,8 @@ func (h *ClassHandler) CreateClass(c echo.Context) (err error) {
 		}
 	}
 
-	filter := bson.M{"_id": userID, "is_deleted": false}
-	user, err := models.GetAUser(h.DB, filter, userRole)
+	filter := bson.M{"_id": userContext.ID, "is_deleted": false}
+	user, err := models.GetAUser(h.DB, filter, userContext.Role)
 	if err != nil {
 		return err
 	}

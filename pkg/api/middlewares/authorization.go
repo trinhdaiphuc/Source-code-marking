@@ -3,9 +3,17 @@ package middlewares
 import (
 	"net/http"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
+	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 )
+
+func GetUser(c echo.Context) models.User {
+	userToken := c.Get("user").(*jwt.Token)
+	claims := userToken.Claims.(interface{})
+	user := claims.(models.User)
+	return user
+}
 
 func IsStudent(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {

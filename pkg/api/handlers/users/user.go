@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/go-redis/redis/v8"
+	"github.com/golang-jwt/jwt"
 	"github.com/trinhdaiphuc/Source-code-marking/internal"
 	"github.com/trinhdaiphuc/Source-code-marking/pkg/api/models"
 	"go.mongodb.org/mongo-driver/mongo"

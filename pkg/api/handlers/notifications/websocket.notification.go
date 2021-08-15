@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 	"github.com/trinhdaiphuc/Source-code-marking/internal"
