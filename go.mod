@@ -20,6 +20,6 @@ require (
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.8.1
 	go.mongodb.org/mongo-driver v1.7.1
-	golang.org/x/crypto v0.1.0
+	golang.org/x/crypto v0.17.0
 	google.golang.org/grpc v1.53.0
 )
