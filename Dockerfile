@@ -13,7 +13,7 @@ WORKDIR /app/src
 RUN go mod download
 RUN make build-binary
 
-FROM alpine:3.10
+FROM alpine:3.18.12
 WORKDIR /app
 
 COPY --from=build /app/src/bin/server /app/
